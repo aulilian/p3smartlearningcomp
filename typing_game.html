@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+  <title>🎮 字母泡泡打字遊戲 - 香港真光中學附屬小學暨幼稚園</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang HK", sans-serif;
+      transition: background 0.6s ease;
+      color: #2d3436;
+    }
+
+    body.theme-candy    { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 50%, #fbc2eb 100%); }
+    body.theme-beach    { background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 60%, #ffd166 100%); }
+    body.theme-sorbet   { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }
+    body.theme-mango    { background: linear-gradient(135deg, #ff9a44 0%, #fc6076 50%, #ffeaa7 100%); }
+    body.theme-lavender { background: linear-gradient(135deg, #b8cbb8 0%, #eacda3 30%, #d6a4e8 100%); }
+
+    #app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 8px 12px 4px 12px;
+      position: relative;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+    .header-left, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      white-space: nowrap;
+    }
+    .student-badge { color: #0984e3; }
+    .score-badge   { color: #d63031; }
+    .timer-badge   { color: #e17055; }
+
+    .header-theme-picker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.65);
+      padding: 4px 8px;
+      border-radius: 20px;
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    }
+    .theme-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      transition: transform 0.15s;
+    }
+    .theme-circle:active { transform: scale(0.85); }
+
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      color: #2d3436;
+      padding: 6px 12px;
+      border-radius: 14px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ctrl-btn:active { transform: scale(0.95); }
+    .ctrl-btn.btn-danger {
+      background: #ff7675;
+      color: white;
+      border-color: #fab1a0;
+    }
+
+    #game-container {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(14px);
+      border-radius: 22px;
+      border: 3px solid rgba(255, 255, 255, 0.7);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .bubble {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.1rem;
+      font-weight: 900;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.16), inset 0 3px 6px rgba(255,255,255,0.9);
+      animation: floatDown linear forwards;
+      line-height: 1;
+    }
+
+    .bubble.uppercase {
+      border: 3.5px solid #ffeaa7;
+      box-shadow: 0 0 14px rgba(253, 203, 110, 0.8), inset 0 3px 6px rgba(255,255,255,0.9);
+    }
+    .bubble.lowercase {
+      border: 3px solid rgba(255, 255, 255, 0.95);
+    }
+
+    /* 練習與初階使用：大寫黃、小寫藍 */
+    .bubble.practice-upper-color {
+      background: radial-gradient(circle at 35% 35%, #fff176, #fbc02d);
+      color: #3e2723;
+    }
+    .bubble.practice-lower-color {
+      background: radial-gradient(circle at 35% 35%, #4fc3f7, #0288d1);
+      color: #ffffff;
+    }
+
+    /* 中階與高階：8 種彩虹糖果色 */
+    .bubble.rainbow-pink    { background: radial-gradient(circle at 35% 35%, #ff76ac, #e84393); color: #fff; }
+    .bubble.rainbow-orange  { background: radial-gradient(circle at 35% 35%, #ffbe76, #f39c12); color: #fff; }
+    .bubble.rainbow-yellow  { background: radial-gradient(circle at 35% 35%, #fff275, #fbc02d); color: #4a3000; }
+    .bubble.rainbow-lime    { background: radial-gradient(circle at 35% 35%, #55efc4, #00b894); color: #003e2f; }
+    .bubble.rainbow-blue    { background: radial-gradient(circle at 35% 35%, #70a1ff, #1e90ff); color: #fff; }
+    .bubble.rainbow-purple  { background: radial-gradient(circle at 35% 35%, #c56cf0, #8854d0); color: #fff; }
+    .bubble.rainbow-cyan    { background: radial-gradient(circle at 35% 35%, #81ecec, #00cec9); color: #004d40; }
+    .bubble.rainbow-coral   { background: radial-gradient(circle at 35% 35%, #ff7675, #d63031); color: #fff; }
+
+    .bubble .type-hint {
+      font-size: 0.65rem;
+      margin-top: 2px;
+      font-weight: 800;
+      background: rgba(0, 0, 0, 0.28);
+      padding: 1px 6px;
+      border-radius: 8px;
+      color: #fff;
+    }
+
+    .paused .bubble {
+      animation-play-state: paused !important;
+    }
+
+    @keyframes floatDown {
+      0% { top: -80px; opacity: 0.95; }
+      90% { opacity: 1; }
+      100% { top: calc(100% + 15px); opacity: 0.1; }
+    }
+
+    .pop-success {
+      animation: popOut 0.22s ease-out forwards !important;
+    }
+    @keyframes popOut {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    #bottom-bar {
+      flex-shrink: 0;
+      padding-top: 6px;
+    }
+    .input-trigger {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1.5px dashed rgba(0, 0, 0, 0.2);
+      padding: 8px;
+      border-radius: 14px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #2d3436;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .input-trigger:active {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .school-footer {
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: rgba(45, 52, 54, 0.75);
+      padding: 4px 0 2px 0;
+      letter-spacing: 0.5px;
+    }
+
+    #hidden-input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: auto;
+      border: none;
+      outline: none;
+    }
+
+    .modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      z-index: 30;
+      text-align: center;
+      padding: 16px;
+      overflow-y: auto;
+      color: #2d3436;
+    }
+    .modal h1 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      color: #e17055;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .profile-bar {
+      display: flex;
+      gap: 12px;
+      margin: 8px 0 14px 0;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 16px;
+      border-radius: 25px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    }
+    .select-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #2d3436;
+    }
+    .select-item select {
+      background: #f1f2f6;
+      color: #2d3436;
+      border: 2px solid #74b9ff;
+      border-radius: 10px;
+      padding: 4px 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 300px;
+    }
+    .btn {
+      border: none;
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 800;
+      padding: 11px 16px;
+      border-radius: 22px;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(0,0,0,0.12);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-practice-upper { background: linear-gradient(135deg, #f39c12, #f1c40f); color: #4a3000; }
+    .btn-practice-lower { background: linear-gradient(135deg, #0984e3, #74b9ff); }
+    .btn-comp-easy      { background: linear-gradient(135deg, #00b894, #55efc4); color: #003e2f; }
+    .btn-comp-mid       { background: linear-gradient(135deg, #ff7675, #e17055); }
+    .btn-comp-hard      { background: linear-gradient(135deg, #8854d0, #c56cf0); }
+    .btn-resume         { background: linear-gradient(135deg, #00b894, #00cec9); }
+    .btn-retry          { background: linear-gradient(135deg, #0984e3, #74b9ff); }
+    .btn-menu           { background: #dfe6e9; color: #2d3436; box-shadow: none; border: 1.5px solid #b2bec3; }
+
+    .cheer-box {
+      margin: 10px 0 14px 0;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 18px;
+      border: 2.5px solid #fdcb6e;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      max-width: 320px;
+    }
+    .level-badge {
+      display: inline-block;
+      background: #ff7675;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    .title-tag {
+      display: block;
+      background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+      color: #6d4c41;
+      font-size: 1.15rem;
+      font-weight: 900;
+      padding: 4px 12px;
+      border-radius: 14px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .cheer-message {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2d3436;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body class="theme-candy">
+
+  <div id="app-container">
+    <header>
+      <div class="header-left">
+        <a href="index.html" class="ctrl-btn"><span>🏠 基地</span></a>
+        <div class="badge student-badge" id="student-tag">👤 3A (01)</div>
+        <div class="badge score-badge">⭐ <span id="score-text">0</span></div>
+        <div class="badge timer-badge">⏳ <span id="timer-text">01:00</span></div>
+      </div>
+      <div class="header-right">
+        <div class="header-theme-picker">
+          <div class="theme-circle" style="background: linear-gradient(135deg, #a1c4fd, #fbc2eb);" title="棉花糖" onclick="setTheme('theme-candy')"></div>
+          <div class="theme-circle" style="background: linear-gradient(135deg, #48c6ef, #ffd166);" title="海灘" onclick="setTheme('theme-beach')"></div>
+          <div class="theme-circle" style="background: linear-gradient(135deg, #84fab0, #8fd3f4);" title="青檸" onclick="setTheme('theme-sorbet')"></div>
+          <div class="theme-circle" style="background: linear-gradient(135deg, #ff9a44, #ffeaa7);" title="芒果" onclick="setTheme('theme-mango')"></div>
+          <div class="theme-circle" style="background: linear-gradient(135deg, #eacda3, #d6a4e8);" title="星空" onclick="setTheme('theme-lavender')"></div>
+        </div>
+
+        <div id="ctrl-buttons" style="display: none; gap: 6px;">
+          <button type="button" class="ctrl-btn" id="pause-btn" onclick="togglePause()">⏸️</button>
+          <button type="button" class="ctrl-btn btn-danger" id="stop-btn" onclick="openQuitModal()">⏹️</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="game-container">
+      <!-- 主選單 -->
+      <div id="menu-modal" class="modal">
+        <h1>⌨️ 打字特工隊</h1>
+
+        <div class="profile-bar">
+          <div class="select-item">
+            <label>班別：</label>
+            <select id="class-select" onchange="updateProfile()">
+              <option value="3A">3A</option>
+              <option value="3B">3B</option>
+              <option value="3C">3C</option>
+              <option value="3D">3D</option>
+            </select>
+          </div>
+          <div class="select-item">
+            <label>學號：</label>
+            <select id="seat-select" onchange="updateProfile()"></select>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-practice-upper" onclick="startLevel('practice_upper')">🟡 暖身練習（純大寫）</button>
+          <button class="btn btn-practice-lower" onclick="startLevel('practice_lower')">🔵 暖身練習（純小寫）</button>
+          <button class="btn btn-comp-easy" onclick="startLevel('comp_easy')">🟢 比賽（初階）</button>
+          <button class="btn btn-comp-mid" onclick="startLevel('comp_mid')">🔴 比賽（中階）</button>
+          <button class="btn btn-comp-hard" onclick="startLevel('comp_hard')">🟣 比賽（高階）</button>
+        </div>
+      </div>
+
+      <!-- 暫停畫面 -->
+      <div id="pause-modal" class="modal" style="display: none;">
+        <h1>⏸️ 遊戲暫停</h1>
+        <p style="font-size: 1rem; margin: 10px 0 16px; font-weight: 700;">喝口水休息一下，準備好隨時回來！</p>
+        <div class="btn-group">
+          <button class="btn btn-resume" onclick="togglePause()">▶️ 繼續挑戰</button>
+          <button class="btn btn-menu" onclick="showMenu()">🏠 回到主選單</button>
+        </div>
+      </div>
+
+      <!-- ⏹️ 停止/提前結束確認畫面（取代容易被瀏覽器屏蔽的 confirm） -->
+      <div id="quit-modal" class="modal" style="display: none;">
+        <h1>⏹️ 結束當前挑戰？</h1>
+        <p style="font-size: 1.05rem; margin: 8px 0 16px; font-weight: 700; line-height: 1.5;">
+          目前得分：<b id="quit-current-score" style="color: #d63031; font-size: 1.5rem;">0</b> 分<br>
+          請問特工想要結算成績還是返回主選單？
+        </p>
+        <div class="btn-group">
+          <button class="btn btn-comp-mid" onclick="endLevelEarly()">📊 提早結算成績</button>
+          <button class="btn btn-menu" onclick="showMenu()">🏠 放棄並回選單</button>
+          <button class="btn btn-resume" onclick="closeQuitModal()">▶️ 繼續遊戲</button>
+        </div>
+      </div>
+
+      <!-- 結算畫面 -->
+      <div id="result-modal" class="modal" style="display: none;">
+        <h1 id="result-title">🎉 挑戰完成！</h1>
+        <p id="result-desc" style="font-size: 1.05rem; line-height: 1.5; margin: 6px 0; font-weight: 700;">得分結算中...</p>
+
+        <!-- 5 級稱號與鼓勵語展示框 -->
+        <div class="cheer-box" id="cheer-box" style="display: none;">
+          <div class="level-badge" id="cheer-level">LEVEL 5</div>
+          <div class="title-tag" id="cheer-title">👑 超能打字特工之神</div>
+          <div class="cheer-message" id="cheer-msg">手速驚人，太棒了！</div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-retry" id="retry-btn" style="display: none;" onclick="retryLevel()">🔄 再練一次</button>
+          <button class="btn btn-comp-easy" id="next-btn" style="display: none;" onclick="nextLevelAction()">下一難度 ➡️</button>
+          <button class="btn btn-menu" onclick="showMenu()">🏠 回到主選單</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部喚醒條 -->
+    <div id="bottom-bar">
+      <div class="input-trigger" onclick="focusKeyboard()">
+        <span>⌨️ 點此喚醒 iPad / 手機鍵盤</span>
+      </div>
+    </div>
+
+    <div class="school-footer">
+      香港真光中學附屬小學暨幼稚園智能課（P3 電腦技能）
+    </div>
+  </div>
+
+  <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+  <script>
+    const RAINBOW_CLASSES = [
+      'rainbow-pink',
+      'rainbow-orange',
+      'rainbow-yellow',
+      'rainbow-lime',
+      'rainbow-blue',
+      'rainbow-purple',
+      'rainbow-cyan',
+      'rainbow-coral'
+    ];
+
+    const seatSelect = document.getElementById('seat-select');
+    for (let i = 1; i <= 40; i++) {
+      const opt = document.createElement('option');
+      opt.value = i < 10 ? '0' + i : '' + i;
+      opt.innerText = i + ' 號';
+      seatSelect.appendChild(opt);
+    }
+
+    function updateProfile() {
+      const cls = document.getElementById('class-select').value;
+      const seat = document.getElementById('seat-select').value;
+      document.getElementById('student-tag').innerText = `👤 ${cls} (${seat})`;
+    }
+    updateProfile();
+
+    function setTheme(themeName) {
+      document.body.className = themeName;
+    }
+
+    const CONFIG = {
+      practice_upper: { name: '暖身練習（純大寫）', isPractice: true,  usePracticeColor: true,  deductPoints: 0, charSet: 'upper', duration: 60,  speed: [9.0, 11.0], spawnDelay: 2600 },
+      practice_lower: { name: '暖身練習（純小寫）', isPractice: true,  usePracticeColor: true,  deductPoints: 0, charSet: 'lower', duration: 60,  speed: [9.0, 11.0], spawnDelay: 2600 },
+      comp_easy:      { name: '比賽（初階）',       isPractice: false, usePracticeColor: true,  deductPoints: 0, charSet: 'mixed', duration: 180, speed: [7.0, 8.5],  spawnDelay: 2000 },
+      comp_mid:       { name: '比賽（中階）',       isPractice: false, usePracticeColor: false, deductPoints: 0, charSet: 'mixed', duration: 180, speed: [5.5, 6.8],  spawnDelay: 1600 },
+      comp_hard:      { name: '比賽（高階）',       isPractice: false, usePracticeColor: false, deductPoints: 2, charSet: 'mixed', duration: 180, speed: [4.5, 5.5],  spawnDelay: 1300 }
+    };
+
+    let currentMode = 'practice_lower';
+    let score = 0;
+    let timeLeft = 60;
+    let isPlaying = false;
+    let isPaused = false;
+    let gameTimer = null;
+    let spawnTimer = null;
+    let activeBubbles = [];
+
+    const gameContainer = document.getElementById('game-container');
+    const scoreText = document.getElementById('score-text');
+    const timerText = document.getElementById('timer-text');
+    const ctrlButtons = document.getElementById('ctrl-buttons');
+    const pauseBtn = document.getElementById('pause-btn');
+    const menuModal = document.getElementById('menu-modal');
+    const pauseModal = document.getElementById('pause-modal');
+    const quitModal = document.getElementById('quit-modal');
+    const resultModal = document.getElementById('result-modal');
+    const resultTitle = document.getElementById('result-title');
+    const resultDesc = document.getElementById('result-desc');
+    const cheerBox = document.getElementById('cheer-box');
+    const cheerLevel = document.getElementById('cheer-level');
+    const cheerTitle = document.getElementById('cheer-title');
+    const cheerMsg = document.getElementById('cheer-msg');
+    const nextBtn = document.getElementById('next-btn');
+    const retryBtn = document.getElementById('retry-btn');
+    const hiddenInput = document.getElementById('hidden-input');
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'hit') {
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1050, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      } else {
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      }
+    }
+
+    function focusKeyboard() {
+      hiddenInput.focus();
+    }
+    gameContainer.addEventListener('click', () => {
+      if (isPlaying && !isPaused) focusKeyboard();
+    });
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function showMenu() {
+      isPlaying = false;
+      isPaused = false;
+      clearInterval(gameTimer);
+      clearInterval(spawnTimer);
+      clearAllBubbles();
+      gameContainer.classList.remove('paused');
+      ctrlButtons.style.display = 'none';
+      pauseModal.style.display = 'none';
+      quitModal.style.display = 'none';
+      resultModal.style.display = 'none';
+      menuModal.style.display = 'flex';
+      timerText.innerText = '01:00';
+    }
+
+    function clearAllBubbles() {
+      document.querySelectorAll('.bubble').forEach(b => b.remove());
+      activeBubbles = [];
+    }
+
+    function startLevel(modeKey) {
+      currentMode = modeKey;
+      const cfg = CONFIG[modeKey];
+
+      score = 0;
+      timeLeft = cfg.duration;
+      isPlaying = true;
+      isPaused = false;
+
+      scoreText.innerText = score;
+      timerText.innerText = formatTime(timeLeft);
+      pauseBtn.innerText = '⏸️';
+
+      ctrlButtons.style.display = 'flex';
+      menuModal.style.display = 'none';
+      pauseModal.style.display = 'none';
+      quitModal.style.display = 'none';
+      resultModal.style.display = 'none';
+      gameContainer.classList.remove('paused');
+      clearAllBubbles();
+
+      focusKeyboard();
+
+      clearInterval(gameTimer);
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        timerText.innerText = formatTime(timeLeft);
+        if (timeLeft <= 0) endLevel();
+      }, 1000);
+
+      clearInterval(spawnTimer);
+      spawnBubble();
+      spawnTimer = setInterval(spawnBubble, cfg.spawnDelay);
+    }
+
+    function togglePause() {
+      if (!isPlaying) return;
+
+      if (!isPaused) {
+        isPaused = true;
+        clearInterval(gameTimer);
+        clearInterval(spawnTimer);
+        gameContainer.classList.add('paused');
+        quitModal.style.display = 'none';
+        pauseModal.style.display = 'flex';
+        pauseBtn.innerText = '▶️';
+      } else {
+        isPaused = false;
+        gameContainer.classList.remove('paused');
+        pauseModal.style.display = 'none';
+        quitModal.style.display = 'none';
+        pauseBtn.innerText = '⏸️';
+        focusKeyboard();
+
+        const cfg = CONFIG[currentMode];
+        gameTimer = setInterval(() => {
+          timeLeft--;
+          timerText.innerText = formatTime(timeLeft);
+          if (timeLeft <= 0) endLevel();
+        }, 1000);
+
+        spawnTimer = setInterval(spawnBubble, cfg.spawnDelay);
+      }
+    }
+
+    /* ⏹️ 停止按鈕觸發：安全暫停並彈出自訂確認框 */
+    function openQuitModal() {
+      if (!isPlaying) return;
+      hiddenInput.blur();
+
+      // 暫停計時與泡泡下落
+      clearInterval(gameTimer);
+      clearInterval(spawnTimer);
+      gameContainer.classList.add('paused');
+      isPaused = true;
+
+      document.getElementById('quit-current-score').innerText = score;
+      pauseModal.style.display = 'none';
+      quitModal.style.display = 'flex';
+      pauseBtn.innerText = '▶️';
+    }
+
+    function closeQuitModal() {
+      quitModal.style.display = 'none';
+      // 恢復遊戲
+      isPaused = false;
+      gameContainer.classList.remove('paused');
+      pauseBtn.innerText = '⏸️';
+      focusKeyboard();
+
+      const cfg = CONFIG[currentMode];
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        timerText.innerText = formatTime(timeLeft);
+        if (timeLeft <= 0) endLevel();
+      }, 1000);
+
+      spawnTimer = setInterval(spawnBubble, cfg.spawnDelay);
+    }
+
+    function endLevelEarly() {
+      quitModal.style.display = 'none';
+      endLevel();
+    }
+
+    function getRandomChar(type) {
+      const lowers = "abcdefghijklmnopqrstuvwxyz";
+      const uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      if (type === 'lower') return lowers[Math.floor(Math.random() * lowers.length)];
+      if (type === 'upper') return uppers[Math.floor(Math.random() * uppers.length)];
+      const all = lowers + uppers;
+      return all[Math.floor(Math.random() * all.length)];
+    }
+
+    function spawnBubble() {
+      if (!isPlaying || isPaused) return;
+      const cfg = CONFIG[currentMode];
+      const char = getRandomChar(cfg.charSet);
+      const isUpper = char === char.toUpperCase();
+
+      const bubble = document.createElement('div');
+      bubble.classList.add('bubble');
+      bubble.classList.add(isUpper ? 'uppercase' : 'lowercase');
+
+      if (cfg.usePracticeColor) {
+        if (isUpper) {
+          bubble.classList.add('practice-upper-color');
+        } else {
+          bubble.classList.add('practice-lower-color');
+        }
+      } else {
+        const randomColor = RAINBOW_CLASSES[Math.floor(Math.random() * RAINBOW_CLASSES.length)];
+        bubble.classList.add(randomColor);
+      }
+
+      bubble.innerText = char;
+
+      const hint = document.createElement('span');
+      hint.className = 'type-hint';
+      hint.innerText = isUpper ? '⇧ 大寫' : '小寫';
+      bubble.appendChild(hint);
+
+      const containerWidth = gameContainer.clientWidth;
+      const x = Math.random() * (containerWidth - 80) + 6;
+      bubble.style.left = `${x}px`;
+
+      const [minS, maxS] = cfg.speed;
+      const duration = (Math.random() * (maxS - minS) + minS).toFixed(1);
+      bubble.style.animationDuration = `${duration}s`;
+
+      gameContainer.appendChild(bubble);
+      const bubbleItem = { element: bubble, char: char };
+      activeBubbles.push(bubbleItem);
+
+      bubble.addEventListener('animationend', () => {
+        bubble.remove();
+        const idx = activeBubbles.indexOf(bubbleItem);
+        if (idx > -1) activeBubbles.splice(idx, 1);
+      });
+    }
+
+    function handleInput(char) {
+      if (!isPlaying || isPaused) return;
+      const cfg = CONFIG[currentMode];
+
+      let matchedIdx = -1;
+      let lowestPos = -999;
+
+      for (let i = 0; i < activeBubbles.length; i++) {
+        const item = activeBubbles[i];
+        if (item.char === char) {
+          const rect = item.element.getBoundingClientRect();
+          if (rect.top > lowestPos) {
+            lowestPos = rect.top;
+            matchedIdx = i;
+          }
+        }
+      }
+
+      if (matchedIdx > -1) {
+        playSound('hit');
+        score += 10;
+        scoreText.innerText = score;
+
+        const target = activeBubbles[matchedIdx];
+        target.element.classList.add('pop-success');
+        activeBubbles.splice(matchedIdx, 1);
+        setTimeout(() => target.element.remove(), 220);
+      } else {
+        playSound('miss');
+        if (cfg.deductPoints > 0) {
+          score = Math.max(0, score - cfg.deductPoints);
+          scoreText.innerText = score;
+        }
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (!isPlaying || isPaused) return;
+      if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+        handleInput(e.key);
+      }
+    });
+
+    hiddenInput.addEventListener('input', () => {
+      const val = hiddenInput.value;
+      if (val.length > 0) {
+        const lastChar = val[val.length - 1];
+        if (/[a-zA-Z]/.test(lastChar)) {
+          handleInput(lastChar);
+        }
+        hiddenInput.value = '';
+      }
+    });
+
+    function getEvaluation(mode, finalScore) {
+      let level = "LEVEL 1";
+      let title = "🌱 勇氣冒險家";
+      let msg = "勇於挑戰就是最棒的開始！多敲幾次鍵盤，手感一定會大爆發！💖🐾";
+
+      if (mode === 'comp_easy') {
+        if (finalScore >= 450) {
+          level = "LEVEL 5";
+          title = "👑 悠閒特工之神";
+          msg = "太神啦！大小寫切換快如閃電，簡直是無懈可擊的打字大師！🎉✨";
+        } else if (finalScore >= 340) {
+          level = "LEVEL 4";
+          title = "⚡ 疾速打字菁英";
+          msg = "手速非常驚人！眼睛精準鎖定每個目標，表現超級亮眼！🚀👏";
+        } else if (finalScore >= 240) {
+          level = "LEVEL 3";
+          title = "🎯 穩定神準射手";
+          msg = "節奏掌控得宜，打字既穩固又扎實，實力不斷飆升中！🌟🎈";
+        } else if (finalScore >= 130) {
+          level = "LEVEL 2";
+          title = "⭐ 潛力打字新星";
+          msg = "很棒的嘗試！手指已經越來越靈活，快抓到破關的秘訣了！😃🌻";
+        } else {
+          level = "LEVEL 1";
+          title = "🌱 初階探索勇者";
+          msg = "一步一腳印！勇敢完成 3 分鐘就是大勝利，繼續加油！💪💖";
+        }
+      } else if (mode === 'comp_mid') {
+        if (finalScore >= 550) {
+          level = "LEVEL 5";
+          title = "👑 幻影極速傳奇";
+          msg = "登峰造極！手指宛如在鍵盤上彈奏美妙樂章，全場焦點就是你！🏆🎆";
+        } else if (finalScore >= 420) {
+          level = "LEVEL 4";
+          title = "⚡ 炫彩特工先鋒";
+          msg = "面對多變的彩虹泡泡依然游刃有餘，反應速度極其敏銳！🚀🔥";
+        } else if (finalScore >= 300) {
+          level = "LEVEL 3";
+          title = "🎯 敏銳破風特工";
+          msg = "進階挑戰成果豐碩！大小寫變換靈活自如，表現可圈可點！👏🌈";
+        } else if (finalScore >= 170) {
+          level = "LEVEL 2";
+          title = "⭐ 堅毅成長學徒";
+          msg = "面對加快的節奏毫不退縮，專注力十足，進步有目共睹！🎈🐾";
+        } else {
+          level = "LEVEL 1";
+          title = "🌱 勇氣冒險新苗";
+          msg = "挑戰中階難度勇氣可嘉！每一次嘗試都是成長的養分！💪💖";
+        }
+      } else if (mode === 'comp_hard') {
+        if (finalScore >= 600) {
+          level = "LEVEL 5";
+          title = "👑 終極特工大宗師";
+          msg = "神級戰績！即使面臨扣分考驗依然所向披靡，真正具備王者風範！🏅🌟";
+        } else if (finalScore >= 450) {
+          level = "LEVEL 4";
+          title = "⚡ 疾風金牌戰將";
+          msg = "抗壓能力超強！在極限速度下依然保持精準與冷靜，太厲害了！🔥🎯";
+        } else if (finalScore >= 320) {
+          level = "LEVEL 3";
+          title = "🎯 沉著破關衛士";
+          msg = "克服扣分挑戰，穩穩守住高分！展現了高超的技巧與耐心！👏✨";
+        } else if (finalScore >= 180) {
+          level = "LEVEL 2";
+          title = "⭐ 堅毅突擊特工";
+          msg = "勇闖高難度賽道！這份專注與不服輸的精神最值得讚許！😃🌻";
+        } else {
+          level = "LEVEL 1";
+          title = "🌱 披荊斬棘拓荒者";
+          msg = "敢於直面最高難度就是真正的勇士！失敗是成功之母，再來一局！💖🌈";
+        }
+      }
+
+      return { level, title, msg };
+    }
+
+    function endLevel() {
+      isPlaying = false;
+      isPaused = false;
+      clearInterval(gameTimer);
+      clearInterval(spawnTimer);
+      clearAllBubbles();
+      ctrlButtons.style.display = 'none';
+      quitModal.style.display = 'none';
+      pauseModal.style.display = 'none';
+
+      const cls = document.getElementById('class-select').value;
+      const seat = document.getElementById('seat-select').value;
+      const cfg = CONFIG[currentMode];
+
+      resultTitle.innerText = "⏰ 時間到！挑戰完成";
+      resultDesc.innerHTML = `學生：<b>${cls} 班 (${seat} 號)</b><br>項目：<b>${cfg.name}</b><br>最終得分：<b style="color:#d63031; font-size:2rem;">${score}</b> 分！`;
+
+      if (cfg.isPractice) {
+        cheerBox.style.display = 'none';
+        retryBtn.style.display = 'block';
+        nextBtn.style.display = 'none';
+      } else {
+        const evalData = getEvaluation(currentMode, score);
+        cheerLevel.innerText = evalData.level;
+        cheerTitle.innerText = evalData.title;
+        cheerMsg.innerText = evalData.msg;
+        cheerBox.style.display = 'block';
+
+        retryBtn.style.display = 'none';
+        if (currentMode === 'comp_easy') {
+          nextBtn.innerText = "比賽（中階） 🔥";
+          nextBtn.style.display = 'block';
+        } else if (currentMode === 'comp_mid') {
+          nextBtn.innerText = "比賽（高階） ⚡";
+          nextBtn.style.display = 'block';
+        } else {
+          nextBtn.style.display = 'none';
+        }
+      }
+
+      resultModal.style.display = 'flex';
+    }
+
+    function retryLevel() {
+      startLevel(currentMode);
+    }
+
+    function nextLevelAction() {
+      if (currentMode === 'comp_easy') startLevel('comp_mid');
+      else if (currentMode === 'comp_mid') startLevel('comp_hard');
+    }
+  </script>
+</body>
+</html>

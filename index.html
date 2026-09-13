@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>智能課（P3 電腦技能）- 香港真光中學附屬小學暨幼稚園</title>
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 10% 20%, #1a1e36 0%, #0f1225 50%, #080914 100%);
+      --grid-color: rgba(0, 242, 254, 0.04);
+      --text-main: #ffffff;
+      --text-sub: #c8d6e5;
+      --school-title: #ffffff;
+      --card-bg: rgba(26, 32, 60, 0.7);
+      --card-border: rgba(0, 242, 254, 0.25);
+      --active-card-bg: linear-gradient(90deg, rgba(0, 242, 254, 0.1) 0%, rgba(26, 32, 60, 0.8) 100%);
+      --active-card-border: rgba(0, 242, 254, 0.7);
+      --locked-card-bg: rgba(18, 22, 40, 0.45);
+      --locked-card-border: rgba(255, 255, 255, 0.08);
+      --locked-text: #747d8c;
+      --badge-bg: rgba(0, 242, 254, 0.12);
+      --badge-border: rgba(0, 242, 254, 0.4);
+      --badge-color: #00f2fe;
+      --footer-color: rgba(0, 242, 254, 0.65);
+      --toggle-bg: rgba(255, 255, 255, 0.15);
+      --toggle-border: rgba(0, 242, 254, 0.4);
+      --toggle-color: #00f2fe;
+    }
+
+    body.light-mode {
+      --bg-gradient: radial-gradient(circle at 10% 20%, #f0f4ff 0%, #e2eafc 50%, #d7e3fc 100%);
+      --grid-color: rgba(9, 132, 227, 0.05);
+      --text-main: #1e272e;
+      --text-sub: #485460;
+      --school-title: #0984e3;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(9, 132, 227, 0.25);
+      --active-card-bg: linear-gradient(90deg, rgba(9, 132, 227, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+      --active-card-border: rgba(9, 132, 227, 0.6);
+      --locked-card-bg: rgba(241, 242, 246, 0.6);
+      --locked-card-border: rgba(0, 0, 0, 0.06);
+      --locked-text: #a4b0be;
+      --badge-bg: rgba(9, 132, 227, 0.1);
+      --badge-border: rgba(9, 132, 227, 0.3);
+      --badge-color: #0984e3;
+      --footer-color: rgba(9, 132, 227, 0.7);
+      --toggle-bg: rgba(255, 255, 255, 0.8);
+      --toggle-border: rgba(9, 132, 227, 0.3);
+      --toggle-color: #0984e3;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang HK", "Microsoft JhengHei", sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      overflow-x: hidden;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+      transition: background-image 0.4s ease;
+    }
+
+    #page-wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px 20px 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .top-toolbar {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--toggle-bg);
+      border: 1.5px solid var(--toggle-border);
+      color: var(--toggle-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:active {
+      transform: scale(0.95);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 26px;
+      width: 100%;
+    }
+    .badge-sub {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--badge-bg);
+      border: 1px solid var(--badge-border);
+      padding: 4px 14px;
+      border-radius: 20px;
+      color: var(--badge-color);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--badge-color);
+      box-shadow: 0 0 8px var(--badge-color);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    .school-name {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--school-title);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      transition: color 0.4s ease;
+    }
+    .main-title {
+      font-size: 1.85rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #a18cd1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+
+    .lessons-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .lesson-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 96px;
+      background: var(--card-bg);
+      backdrop-filter: blur(14px);
+      border-radius: 20px;
+      padding: 18px 24px;
+      border: 1.5px solid var(--card-border);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      gap: 20px;
+    }
+
+    .lesson-row.active-row {
+      border-color: var(--active-card-border);
+      background: var(--active-card-bg);
+      box-shadow: 0 8px 25px rgba(0, 242, 254, 0.12);
+    }
+    .lesson-row.active-row:hover {
+      transform: translateY(-2px);
+    }
+
+    .row-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+    .row-tag {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      color: #0b1021;
+      font-size: 0.95rem;
+      font-weight: 900;
+      padding: 8px 16px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .row-text {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+    .row-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row-desc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 0;
+      margin: 0;
+    }
+    .row-desc-list li {
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--text-sub);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .row-desc-list li .bullet-icon {
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .tech-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 18px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-decoration: none;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: transform 0.1s ease, filter 0.2s ease;
+      white-space: nowrap;
+    }
+    .tech-btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-purple {
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      border: 1px solid rgba(162, 155, 254, 0.5);
+    }
+    .btn-purple:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-cyan {
+      background: linear-gradient(135deg, #00b894, #00cec9);
+      border: 1px solid rgba(0, 206, 201, 0.5);
+    }
+    .btn-cyan:hover {
+      filter: brightness(1.1);
+    }
+
+    .lesson-row.locked-row {
+      background: var(--locked-card-bg);
+      border-color: var(--locked-card-border);
+      box-shadow: none;
+      opacity: 0.65;
+    }
+    .locked-row .row-tag {
+      background: #747d8c;
+      color: #f1f2f6;
+      box-shadow: none;
+    }
+    .locked-row .row-title {
+      color: var(--locked-text);
+      font-size: 1.15rem;
+    }
+    .locked-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(120, 120, 120, 0.08);
+      border: 1px dashed rgba(120, 120, 120, 0.25);
+      color: var(--locked-text);
+      padding: 9px 16px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--footer-color);
+      letter-spacing: 1px;
+      transition: color 0.4s ease;
+    }
+
+    @media (max-width: 768px) {
+      .lesson-row {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px 18px;
+        gap: 14px;
+      }
+      .row-info {
+        width: 100%;
+        align-items: flex-start;
+      }
+      .row-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .tech-btn, .locked-badge {
+        flex: 1;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="page-wrapper">
+    <div class="top-toolbar">
+      <button class="theme-toggle-btn" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-label">淺色模式</span>
+      </button>
+    </div>
+
+    <header>
+      <div class="badge-sub">
+        <span class="pulse-dot"></span>
+        <span>SMART LEARNING</span>
+      </div>
+      <h1 class="school-name">香港真光中學附屬小學暨幼稚園</h1>
+      <div class="main-title">⚡ 智能課（P3 電腦技能）任務基地</div>
+    </header>
+
+    <main class="lessons-list">
+
+      <!-- 第一節：常用按鍵特工站在前，字母泡泡打字遊戲在後 -->
+      <div class="lesson-row active-row">
+        <div class="row-info">
+          <div class="row-tag">第一節</div>
+          <div class="row-text">
+            <div class="row-title">⌨️ 鍵盤特工與文字輸入</div>
+            <ul class="row-desc-list">
+              <li>
+                <span class="bullet-icon">🔍</span>
+                <span><b>常用按鍵：</b>掌握大小寫（Shift）、換行、刪除、符號切換及移動文字位置等全套功能。</span>
+              </li>
+              <li>
+                <span class="bullet-icon">🎮</span>
+                <span><b>泡泡打字：</b>在彩虹泡泡落地前輸入字母，挑戰反應與大小寫切換速度！</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="row-actions">
+          <a href="keyboard_game.html" class="tech-btn btn-purple">
+            <span>🔍 認識常用按鍵特工站</span>
+          </a>
+          <a href="typing_game.html" class="tech-btn btn-cyan">
+            <span>🎮 字母泡泡打字遊戲</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 第二節 -->
+      <div class="lesson-row locked-row">
+        <div class="row-info">
+          <div class="row-tag">第二節</div>
+          <div class="row-text">
+            <div class="row-title">待開放</div>
+          </div>
+        </div>
+        <div class="row-actions">
+          <div class="locked-badge">🔒 敬請期待</div>
+        </div>
+      </div>
+
+      <!-- 第三節 -->
+      <div class="lesson-row locked-row">
+        <div class="row-info">
+          <div class="row-tag">第三節</div>
+          <div class="row-text">
+            <div class="row-title">待開放</div>
+          </div>
+        </div>
+        <div class="row-actions">
+          <div class="locked-badge">🔒 敬請期待</div>
+        </div>
+      </div>
+
+      <!-- 第四節 -->
+      <div class="lesson-row locked-row">
+        <div class="row-info">
+          <div class="row-tag">第四節</div>
+          <div class="row-text">
+            <div class="row-title">待開放</div>
+          </div>
+        </div>
+        <div class="row-actions">
+          <div class="locked-badge">🔒 敬請期待</div>
+        </div>
+      </div>
+
+      <!-- 第五節 -->
+      <div class="lesson-row locked-row">
+        <div class="row-info">
+          <div class="row-tag">第五節</div>
+          <div class="row-text">
+            <div class="row-title">待開放</div>
+          </div>
+        </div>
+        <div class="row-actions">
+          <div class="locked-badge">🔒 敬請期待</div>
+        </div>
+      </div>
+
+    </main>
+
+    <footer>
+      SMART LEARNING // 香港真光中學附屬小學暨幼稚園智能課（P3 電腦技能）
+    </footer>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const isLight = body.classList.toggle('light-mode');
+      const icon = document.getElementById('theme-icon');
+      const label = document.getElementById('theme-label');
+
+      if (isLight) {
+        icon.innerText = '🌙';
+        label.innerText = '深色模式';
+      } else {
+        icon.innerText = '☀️';
+        label.innerText = '淺色模式';
+      }
+    }
+  </script>
+</body>
+</html>
