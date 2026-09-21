@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>📧 特工總部・Google 登入實戰特訓</title>
+  <!-- 引入高辨識度科技字體 Exo 2 與 JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800;900&family=JetBrains+Mono:wght@600;700;800&family=Noto+Sans+TC:wght@600;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 10% 20%, #0d1117 0%, #06090e 50%, #020408 100%);
+      --grid-color: rgba(0, 242, 254, 0.05);
+      --neon-cyan: #00f2fe;
+      --neon-blue: #38bdf8;
+      --neon-green: #10b981;
+      --neon-red: #f43f5e;
+      --neon-gold: #f59e0b;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      
+      --card-bg: rgba(15, 23, 42, 0.88);
+      --card-border: rgba(0, 242, 254, 0.35);
+      --card-glow: 0 0 25px rgba(0, 242, 254, 0.15);
+      --modal-bg: rgba(10, 15, 29, 0.98);
+      
+      --google-card-bg: #1e293b;
+      --google-card-border: rgba(255, 255, 255, 0.12);
+      --input-bg: #0f172a;
+      --input-border: #38bdf8;
+      --input-text: #ffffff;
+      --suffix-color: #64748b;
+    }
+
+    body.light-mode {
+      --bg-gradient: radial-gradient(circle at 10% 20%, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+      --grid-color: rgba(14, 165, 233, 0.06);
+      --neon-cyan: #0284c7;
+      --neon-blue: #2563eb;
+      --neon-green: #059669;
+      --neon-red: #e11d48;
+      --neon-gold: #d97706;
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --card-border: rgba(2, 132, 199, 0.4);
+      --card-glow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --modal-bg: rgba(255, 255, 255, 0.98);
+      
+      --google-card-bg: #ffffff;
+      --google-card-border: #cbd5e1;
+      --input-bg: #f8fafc;
+      --input-border: #0284c7;
+      --input-text: #0f172a;
+      --suffix-color: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Exo 2', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      width: 85vw;
+      height: 85vh;
+      max-width: 1100px;
+      max-height: 850px;
+      margin: auto;
+      padding: 12px 18px;
+      justify-content: space-between;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      width: 100%;
+    }
+    .header-left, .header-right, .header-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 800;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+      box-shadow: var(--card-glow);
+      letter-spacing: 0.5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .student-badge { color: var(--neon-green); border-color: rgba(16, 185, 129, 0.4); }
+    .progress-badge { color: var(--neon-cyan); }
+    .score-badge { color: var(--neon-gold); }
+    .timer-badge { color: var(--neon-red); min-width: 84px; text-align: center; }
+
+    .nav-btn {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: var(--card-glow);
+      white-space: nowrap;
+    }
+    .nav-btn:active { transform: scale(0.95); }
+    .btn-pause { color: var(--neon-gold); border-color: rgba(245, 158, 11, 0.4); }
+    .btn-stop { color: var(--neon-red); border-color: rgba(244, 63, 94, 0.4); }
+
+    #timer-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      margin: 8px 0;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #timer-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+      border-radius: 4px;
+      transform-origin: left center;
+      will-change: width;
+    }
+
+    #student-id-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 14px;
+      padding: 10px 18px;
+      box-shadow: var(--card-glow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      backdrop-filter: blur(12px);
+      margin-bottom: 8px;
+    }
+    .id-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .id-avatar {
+      font-size: 1.8rem;
+      background: rgba(0, 242, 254, 0.1);
+      border: 1.5px solid var(--neon-cyan);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .id-info-title {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .id-info-creds {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .id-info-creds span { color: var(--neon-cyan); }
+    .new-agent-highlight { color: var(--neon-gold) !important; animation: pulseGlow 1.2s infinite alternate; }
+
+    #google-login-box {
+      flex: 1;
+      width: 100%;
+      background: var(--google-card-bg);
+      border: 1.5px solid var(--google-card-border);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .google-logo {
+      font-size: 2.3rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+      font-family: Arial, sans-serif;
+    }
+    .g-blue { color: #4285f4; }
+    .g-red { color: #ea4335; }
+    .g-yellow { color: #fbbc05; }
+    .g-green { color: #34a853; }
+
+    .google-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .google-sub {
+      font-size: 1rem;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .mission-hud-prompt {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--neon-cyan);
+      margin-bottom: 12px;
+      text-align: center;
+      max-width: 880px;
+      line-height: 1.4;
+      text-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+    }
+
+    #help-hint-box {
+      display: none;
+      background: rgba(245, 158, 11, 0.15);
+      border: 2px dashed var(--neon-gold);
+      border-radius: 12px;
+      padding: 8px 16px;
+      margin-bottom: 10px;
+      color: var(--neon-gold);
+      font-size: 1.15rem;
+      font-weight: 800;
+      text-align: center;
+      animation: pulseGlow 1.5s infinite alternate;
+    }
+    @keyframes pulseGlow {
+      from { box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
+      to { box-shadow: 0 0 22px rgba(245, 158, 11, 0.7); }
+    }
+
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      align-items: center;
+      background: var(--input-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-wrapper:focus-within {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.35);
+    }
+    .input-wrapper.shake-error {
+      border-color: var(--neon-red) !important;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.5) !important;
+      animation: shake 0.3s ease;
+    }
+
+    .real-agent-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--input-text);
+      font-family: 'JetBrains Mono', monospace;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .domain-suffix-tag {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--suffix-color);
+      padding-left: 4px;
+      pointer-events: none;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .google-actions {
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+    .btn-next-google {
+      background: #1a73e8;
+      color: #ffffff;
+      border: none;
+      padding: 10px 26px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(26, 115, 232, 0.4);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-next-google:active { transform: scale(0.96); }
+
+    .feedback-hud-bar {
+      margin-top: 10px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      min-height: 28px;
+      text-align: center;
+    }
+    .fb-correct { color: var(--neon-green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    .fb-wrong { color: var(--neon-red); text-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
+
+    .overlay-modal {
+      position: absolute;
+      inset: 0;
+      background: var(--modal-bg);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      z-index: 50;
+      text-align: center;
+      padding: 24px;
+    }
+    .modal-top-bar {
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 6px;
+    }
+    .modal-title {
+      font-size: 2.3rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .student-select-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 16px;
+      padding: 14px 20px;
+      max-width: 540px;
+      width: 100%;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+    .select-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .custom-select {
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1.5px solid var(--input-border);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      outline: none;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .rules-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px 22px;
+      max-width: 540px;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--text-main);
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+    .rules-card b { color: var(--neon-cyan); }
+
+    .score-banner {
+      font-size: 3.4rem;
+      font-weight: 900;
+      color: var(--neon-gold);
+      margin: 8px 0;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .agent-title {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+      color: #0b1021;
+      padding: 8px 24px;
+      border-radius: 16px;
+      font-size: 1.3rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+    .eval-msg {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+      line-height: 1.45;
+      margin-bottom: 18px;
+      max-width: 460px;
+      font-weight: 600;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .action-btn {
+      border: none;
+      padding: 12px 28px;
+      border-radius: 14px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: #fff;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-start   { background: linear-gradient(135deg, var(--neon-green), #059669); box-shadow: 0 0 16px rgba(16, 185, 129, 0.4); }
+    .btn-resume  { background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue)); }
+    .btn-settle  { background: linear-gradient(135deg, var(--neon-gold), #d97706); }
+    .btn-restart { background: linear-gradient(135deg, var(--neon-green), #059669); }
+    .btn-home    { background: rgba(100, 116, 139, 0.3); color: var(--text-main); }
+    .btn-danger  { background: linear-gradient(135deg, var(--neon-red), #e11d48); }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%, 75% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+    }
+
+    @media (max-width: 768px) {
+      #app-container { width: 94vw; height: 92vh; padding: 8px; }
+      .mission-hud-prompt { font-size: 1.25rem; }
+      .real-agent-input { font-size: 1.2rem; }
+      .domain-suffix-tag { font-size: 1.1rem; }
+      #student-id-card { flex-direction: column; align-items: flex-start; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+    
+    <!-- 1. 遊戲主頁說明彈窗 -->
+    <div id="intro-modal" class="overlay-modal">
+      <div class="modal-top-bar">
+        <button class="nav-btn" onclick="toggleTheme()"><span class="theme-btn-text">☀️ 淺色</span></button>
+      </div>
+
+      <h1 class="modal-title">📧 特工總部・Google 登入特訓</h1>
+      
+      <div class="student-select-card">
+        <div class="select-item">
+          <label for="select-class">班別：</label>
+          <select id="select-class" class="custom-select">
+            <option value="3A">3A</option>
+            <option value="3B">3B</option>
+            <option value="3C">3C</option>
+            <option value="3D">3D</option>
+          </select>
+        </div>
+        <div class="select-item">
+          <label for="select-num">學號：</label>
+          <select id="select-num" class="custom-select"></select>
+        </div>
+      </div>
+
+      <div class="rules-card">
+        <div>🌐 <b>鍵盤切換：</b>打字前請先使用地球儀 🌐 將中文鍵盤切換為<b>英文鍵盤</b>！</div>
+        <div>🚫 <b>欄位分開：</b>分清公開的「電郵」與保密的「密碼」，絕不在同一格輸入！</div>
+        <div>⏱️ <b>充裕時間：</b>普通關卡 30 秒，<b>完整輸入全串電郵關卡特別放寬至 60 秒！</b></div>
+        <div>💡 <b>特工支援：</b>答錯扣 2 分；<b>若連續錯滿 5 次，螢幕會發送提示！</b></div>
+      </div>
+
+      <div class="btn-group">
+        <a href="index.html" class="action-btn btn-home">🏠 返回基地</a>
+        <button class="action-btn btn-start" onclick="startGame()">⚡ 啟動特工訓練</button>
+      </div>
+    </div>
+
+    <!-- 2. 暫停彈窗 -->
+    <div id="pause-modal" class="overlay-modal" style="display: none;">
+      <h1 class="modal-title">⏸️ 任務暫停中</h1>
+      <div class="btn-group">
+        <button class="action-btn btn-resume" onclick="resumeGame()">▶️ 繼續作答</button>
+        <button class="action-btn btn-settle" onclick="confirmEarlySettle()">📊 結算成績</button>
+        <a href="index.html" class="action-btn btn-home">🏠 回任務基地</a>
+      </div>
+    </div>
+
+    <!-- 3. 結束確認彈窗 -->
+    <div id="stop-modal" class="overlay-modal" style="display: none;">
+      <h1 class="modal-title">⏹️ 結束特訓</h1>
+      <div class="btn-group">
+        <button class="action-btn btn-settle" onclick="confirmEarlySettle()">📊 結算分數</button>
+        <button class="action-btn btn-resume" onclick="closeStopModal()">▶️ 繼續挑戰</button>
+        <a href="index.html" class="action-btn btn-danger">🏠 直接離開</a>
+      </div>
+    </div>
+
+    <!-- 頂部 HUD 狀態列 -->
+    <header>
+      <div class="header-left">
+        <a href="index.html" class="nav-btn">🏠 基地</a>
+        <button class="nav-btn" onclick="toggleTheme()"><span class="theme-btn-text">☀️ 淺色</span></button>
+        <div class="badge student-badge" id="student-badge-display">3A (1號)</div>
+      </div>
+      <div class="header-center">
+        <div class="badge progress-badge"><span id="q-idx-text">第 1 關</span> / 共 15 關</div>
+      </div>
+      <div class="header-right">
+        <div class="badge score-badge">⭐ <span id="score-text">0</span> 分</div>
+        <div class="badge timer-badge">⏱️ <span id="timer-text">30</span>s</div>
+        <button class="nav-btn btn-pause" onclick="pauseGame()">⏸️ 暫停</button>
+        <button class="nav-btn btn-stop" onclick="openStopModal()">⏹️ 結束</button>
+      </div>
+    </header>
+
+    <div id="timer-bar-container">
+      <div id="timer-bar-fill"></div>
+    </div>
+
+    <!-- 學生證常駐卡片 -->
+    <div id="student-id-card">
+      <div class="id-left">
+        <div class="id-avatar" id="agent-avatar-icon">🪪</div>
+        <div>
+          <div class="id-info-title" id="agent-card-title">特工學生證 (請核對資料)</div>
+          <div class="id-info-creds">
+            <div>電郵：<span id="preview-email">s123456@tlmshkps.edu.hk</span></div>
+            <div>密碼：<span id="preview-pwd">tl12345678</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Google 登入模擬卡片主區域 -->
+    <div id="google-login-box">
+      <div class="google-logo">
+        <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
+      </div>
+      <div class="google-title" id="google-stage-title">登入</div>
+      <div class="google-sub" id="google-stage-sub">使用你的 Google 學校帳戶</div>
+
+      <div class="mission-hud-prompt" id="mission-prompt">題目載入中...</div>
+
+      <div id="help-hint-box"></div>
+
+      <div class="input-wrapper" id="agent-input-wrapper">
+        <input type="text" 
+               id="agent-real-input" 
+               class="real-agent-input" 
+               autocomplete="off" 
+               autocorrect="off" 
+               autocapitalize="off" 
+               spellcheck="false" 
+               placeholder="在此點擊並用真實鍵盤輸入">
+        <span class="domain-suffix-tag" id="domain-prefill-tag" style="display: none;">@tlmshkps.edu.hk</span>
+      </div>
+
+      <div class="google-actions">
+        <button class="btn-next-google" id="btn-next-step" onclick="handleNextClick()">下一步</button>
+      </div>
+
+      <div class="feedback-hud-bar" id="feedback-hud"></div>
+    </div>
+
+    <!-- 結算畫面 -->
+    <div id="result-modal" class="overlay-modal" style="display: none;">
+      <h1 class="modal-title">🎉 特訓結算！</h1>
+      <div style="font-size:1.3rem; font-weight:800; color:var(--text-sub); font-family:'JetBrains Mono', monospace;" id="result-student-info">3A 班 1 號特工</div>
+      <div class="score-banner"><span id="final-score">0</span> <span style="font-size:1.5rem; color:var(--text-main);">分</span></div>
+      <div class="agent-title" id="final-title">👑 首席網絡特工大師</div>
+      <div class="eval-msg" id="final-eval">表現優異！</div>
+      <div class="btn-group">
+        <button class="action-btn btn-restart" onclick="restartGame()">🔄 換張學生證再練一次</button>
+        <a href="index.html" class="action-btn btn-home">🏠 返回任務基地</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const selectNumEl = document.getElementById('select-num');
+    for (let i = 1; i <= 40; i++) {
+      const opt = document.createElement('option');
+      opt.value = i.toString();
+      opt.textContent = `${i} 號`;
+      selectNumEl.appendChild(opt);
+    }
+
+    let primaryUserPart = "";
+    let primaryEmailFull = "";
+    let primaryPassword = "";
+
+    let newAgentName = "Agent Nova";
+    let newUserPart = "";
+    let newEmailFull = "";
+    let newPassword = "";
+
+    const AGENT_CODENAMES = ["Agent Orion", "Agent Nova", "Agent Phoenix", "Agent Titan", "Agent Cyber", "Agent Echo"];
+
+    function generateCredentials() {
+      const rand6 = Math.floor(100000 + Math.random() * 900000);
+      primaryUserPart = `s${rand6}`;
+      primaryEmailFull = `${primaryUserPart}@tlmshkps.edu.hk`;
+
+      const rand8 = Math.floor(10000000 + Math.random() * 90000000);
+      primaryPassword = `tl${rand8}`;
+
+      const randNew6 = Math.floor(100000 + Math.random() * 900000);
+      newUserPart = `s${randNew6}`;
+      newEmailFull = `${newUserPart}@tlmshkps.edu.hk`;
+
+      const randNew8 = Math.floor(10000000 + Math.random() * 90000000);
+      newPassword = `tl${randNew8}`;
+
+      newAgentName = AGENT_CODENAMES[Math.floor(Math.random() * AGENT_CODENAMES.length)];
+    }
+
+    let currentStage = 0;
+    let score = 0;
+    let stageDeduction = 0;
+    let stageWrongCount = 0;
+    let isProcessing = false;
+    let isPaused = false;
+    let currentStudentClass = "3A";
+    let currentStudentNum = "1";
+
+    let currentStageTimeLimit = 30; // 支援動態秒數 (普通 30s，打完整電郵 60s)
+    let timeLeftMs = 30000;
+    let lastTimestamp = null;
+    let animFrameId = null;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(success) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (success) {
+        osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1040, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.14);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.14);
+      } else {
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      }
+    }
+
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light-mode');
+      const label = isLight ? '🌙 深色' : '☀️ 淺色';
+      document.querySelectorAll('.theme-btn-text').forEach(el => el.innerText = label);
+    }
+
+    function startGame() {
+      currentStudentClass = document.getElementById('select-class').value;
+      currentStudentNum = document.getElementById('select-num').value;
+      generateCredentials();
+
+      document.getElementById('student-badge-display').innerText = `${currentStudentClass} (${currentStudentNum}號)`;
+      document.getElementById('preview-email').innerText = primaryEmailFull;
+      document.getElementById('preview-pwd').innerText = primaryPassword;
+
+      document.getElementById('intro-modal').style.display = 'none';
+      document.getElementById('pause-modal').style.display = 'none';
+      document.getElementById('stop-modal').style.display = 'none';
+
+      currentStage = 0;
+      score = 0;
+      isPaused = false;
+      document.getElementById('score-text').innerText = score;
+      loadStage(0);
+    }
+
+    function pauseGame() {
+      if (isProcessing) return;
+      isPaused = true;
+      cancelAnimationFrame(animFrameId);
+      document.getElementById('pause-modal').style.display = 'flex';
+    }
+
+    function resumeGame() {
+      document.getElementById('pause-modal').style.display = 'none';
+      isPaused = false;
+      lastTimestamp = performance.now();
+      animFrameId = requestAnimationFrame(timerStep);
+    }
+
+    function openStopModal() {
+      if (isProcessing) return;
+      isPaused = true;
+      cancelAnimationFrame(animFrameId);
+      document.getElementById('stop-modal').style.display = 'flex';
+    }
+
+    function closeStopModal() {
+      document.getElementById('stop-modal').style.display = 'none';
+      isPaused = false;
+      lastTimestamp = performance.now();
+      animFrameId = requestAnimationFrame(timerStep);
+    }
+
+    function confirmEarlySettle() {
+      document.getElementById('pause-modal').style.display = 'none';
+      document.getElementById('stop-modal').style.display = 'none';
+      showResult();
+    }
+
+    function startTimer(seconds) {
+      cancelAnimationFrame(animFrameId);
+      currentStageTimeLimit = seconds;
+      timeLeftMs = currentStageTimeLimit * 1000;
+      lastTimestamp = performance.now();
+      updateTimerDisplay();
+      animFrameId = requestAnimationFrame(timerStep);
+    }
+
+    function timerStep(now) {
+      if (isPaused || isProcessing) return;
+      const delta = now - lastTimestamp;
+      lastTimestamp = now;
+      timeLeftMs = Math.max(0, timeLeftMs - delta);
+      updateTimerDisplay();
+
+      if (timeLeftMs <= 0) {
+        handleTimeout();
+      } else {
+        animFrameId = requestAnimationFrame(timerStep);
+      }
+    }
+
+    function updateTimerDisplay() {
+      const sec = Math.ceil(timeLeftMs / 1000);
+      document.getElementById('timer-text').innerText = sec;
+      const fill = document.getElementById('timer-bar-fill');
+      const pct = (timeLeftMs / (currentStageTimeLimit * 1000)) * 100;
+      fill.style.width = pct + '%';
+
+      if (pct <= 25) {
+        fill.style.background = 'var(--neon-red)';
+      } else if (pct <= 50) {
+        fill.style.background = 'var(--neon-gold)';
+      } else {
+        fill.style.background = 'linear-gradient(90deg, var(--neon-cyan), var(--neon-green))';
+      }
+    }
+
+    function handleTimeout() {
+      isProcessing = true;
+      cancelAnimationFrame(animFrameId);
+      playBeep(false);
+
+      const fb = document.getElementById('feedback-hud');
+      fb.className = 'feedback-hud-bar fb-wrong';
+      fb.innerText = `⏱️ 時間到！請看清楚題目指引再試！（+0分）`;
+
+      setTimeout(() => {
+        nextStage();
+      }, 2400);
+    }
+
+    // 15 關場景設置
+    function loadStage(idx) {
+      isProcessing = false;
+      stageDeduction = 0;
+      stageWrongCount = 0;
+
+      const qIdxText = document.getElementById('q-idx-text');
+      const promptEl = document.getElementById('mission-prompt');
+      const stageTitleEl = document.getElementById('google-stage-title');
+      const stageSubEl = document.getElementById('google-stage-sub');
+      const inputEl = document.getElementById('agent-real-input');
+      const prefillTag = document.getElementById('domain-prefill-tag');
+      const fb = document.getElementById('feedback-hud');
+      const hintBox = document.getElementById('help-hint-box');
+      const previewEmailEl = document.getElementById('preview-email');
+      const previewPwdEl = document.getElementById('preview-pwd');
+      const cardTitleEl = document.getElementById('agent-card-title');
+      const cardAvatar = document.getElementById('agent-avatar-icon');
+
+      hintBox.style.display = 'none';
+      hintBox.innerText = '';
+
+      qIdxText.innerText = `第 ${idx + 1} 關`;
+      fb.className = 'feedback-hud-bar';
+      fb.innerText = '';
+      inputEl.value = '';
+      inputEl.type = 'text';
+      inputEl.readOnly = false;
+
+      // 檢查是否需切換為新角色身分（第 14 關與第 15 關）
+      if (idx >= 13) {
+        cardAvatar.innerText = "🚀";
+        cardTitleEl.innerText = `緊急接管任務：新特工身份【${newAgentName}】`;
+        cardTitleEl.classList.add('new-agent-highlight');
+        previewEmailEl.innerText = newEmailFull;
+        previewEmailEl.classList.add('new-agent-highlight');
+        previewPwdEl.innerText = newPassword;
+        previewPwdEl.classList.add('new-agent-highlight');
+      } else {
+        cardAvatar.innerText = "🪪";
+        cardTitleEl.innerText = "特工學生證 (請核對資料)";
+        cardTitleEl.classList.remove('new-agent-highlight');
+        previewEmailEl.innerText = primaryEmailFull;
+        previewEmailEl.classList.remove('new-agent-highlight');
+        previewPwdEl.innerText = primaryPassword;
+        previewPwdEl.classList.remove('new-agent-highlight');
+      }
+
+      let stageDuration = 30; // 預設 30 秒
+
+      switch(idx) {
+        case 0:
+          stageTitleEl.innerText = "登入前準備：鍵盤切換";
+          stageSubEl.innerText = "電郵與密碼只能使用英文與半形數字";
+          promptEl.innerText = "⚠️ 鍵盤目前是中文模式！請在 iPad 點地球儀 🌐 切換至英文鍵盤，並輸入英文「ok」：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入英文 ok";
+          break;
+        case 1:
+          stageTitleEl.innerText = "Google 帳戶登入 (第 1 頁)";
+          stageSubEl.innerText = "認識欄位一：使用者電郵地址";
+          promptEl.innerText = "✉️ 電郵是用來辨識身份的公開地址。學生電郵開頭固定是「s」，請在鍵盤輸入字母「s」：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入字母 s";
+          break;
+        case 2:
+          stageTitleEl.innerText = "Google 帳戶登入 (第 1 頁)";
+          stageSubEl.innerText = "電郵欄位：輸入學號數字";
+          promptEl.innerText = `🪪 電郵可以分享給老師！請在電郵欄位輸入你的 6 位學號數字（${primaryUserPart.substring(1)}）：`;
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入 6 位數字";
+          break;
+        case 3:
+          stageTitleEl.innerText = "Google 帳戶登入 (第 1 頁)";
+          stageSubEl.innerText = "🚫 絕不能在電郵格子打密碼！";
+          promptEl.innerText = "⚠️ 觀念檢定：很多同學會把密碼打在這裏！請輸入單字「email」證明你清楚這是電郵格子：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請打單字 email";
+          break;
+        case 4:
+          stageTitleEl.innerText = "Google 帳戶登入 (預印域名)";
+          stageSubEl.innerText = "留意輸入框右側的預印標記";
+          promptEl.innerText = `🚨 關鍵陷阱：右邊已印好域名！只需輸入前綴「${primaryUserPart}」，絕不要重複打 @ 喔！`;
+          prefillTag.style.display = 'inline-block';
+          inputEl.placeholder = `只需輸入 ${primaryUserPart}`;
+          break;
+        case 5:
+          stageTitleEl.innerText = "Google 帳戶登入 (預印確認)";
+          stageSubEl.innerText = "確認電郵無誤後進入下一頁";
+          promptEl.innerText = "👀 確認右側有預印的 @tlmshkps.edu.hk！請直接點按右下角藍色【下一步】進入密碼頁！";
+          prefillTag.style.display = 'inline-block';
+          inputEl.value = primaryUserPart;
+          inputEl.readOnly = true;
+          break;
+        case 6:
+          stageTitleEl.innerText = "Google 帳戶登入 (符號練習)";
+          stageSubEl.innerText = "若無預印，電郵必備的重要符號";
+          promptEl.innerText = "⚡ 如果是空白頁面，電郵必須有連接標記！請在輸入格內打出「@」符號：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入 @";
+          break;
+        case 7:
+          stageTitleEl.innerText = "Google 帳戶登入 (學校縮寫)";
+          stageSubEl.innerText = "學校域名縮寫練習";
+          promptEl.innerText = "🏫 請在鍵盤上輸入真光小學的英文域名縮寫「tlmshkps」：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入 tlmshkps";
+          break;
+        case 8:
+          stageTitleEl.innerText = "Google 帳戶登入 (網域點號)";
+          stageSubEl.innerText = "點號 vs 逗號辨析";
+          promptEl.innerText = "🌐 域名是 .edu.hk，請在鍵盤找出網域點號「.」（絕不能打成逗號 , 喔）：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入點號 .";
+          break;
+        case 9:
+          stageTitleEl.innerText = "Google 密碼驗證 (第 2 頁)";
+          stageSubEl.innerText = "認識欄位二：個人專屬機密密碼";
+          promptEl.innerText = "🔒【密碼欄位】是最高機密（會以黑點隱藏）！請輸入密碼開頭第一個字母「t」：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入字母 t";
+          break;
+        case 10:
+          stageTitleEl.innerText = "Google 密碼驗證 (第 2 頁)";
+          stageSubEl.innerText = "密碼固定開頭 tl";
+          promptEl.innerText = "🔑 密碼開頭固定是 tl，請在輸入格內打出第二個字母「l」：";
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = "請輸入字母 l";
+          break;
+        // 需輸入整串電郵（第 12 關）：放寬至 60 秒 (1 分鐘)
+        case 11:
+          stageDuration = 60;
+          stageTitleEl.innerText = "電郵打字實戰練打 (第 1 頁)";
+          stageSubEl.innerText = "一氣呵成輸入自己的完整學校電郵（限時 60 秒）";
+          promptEl.innerText = `⌨️ 特訓練打（限時 1 分鐘）：請完整打出你上方學生證的整個電郵（含 @tlmshkps.edu.hk）：`;
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = `${primaryEmailFull}`;
+          break;
+        case 12:
+          stageTitleEl.innerText = "密碼打字實戰練打 (第 2 頁)";
+          stageSubEl.innerText = "密碼保護狀態下完整輸入";
+          promptEl.innerText = `🔐 密碼練打：請完整輸入學生證上的 10 碼密碼（${primaryPassword}）：`;
+          prefillTag.style.display = 'none';
+          inputEl.type = 'password';
+          inputEl.placeholder = "輸入完整密碼";
+          break;
+        // 需輸入新角色整串電郵（第 14 關）：放寬至 60 秒 (1 分鐘)
+        case 13:
+          stageDuration = 60;
+          stageTitleEl.innerText = "緊急任務：接管新特工身份";
+          stageSubEl.innerText = `接管對象：${newAgentName}（限時 60 秒）`;
+          promptEl.innerText = `🪪 實戰大考驗（限時 1 分鐘）：請看上方【${newAgentName}】的學生證，完整打出他的電郵地址！`;
+          prefillTag.style.display = 'none';
+          inputEl.placeholder = `請輸入完整電郵：${newEmailFull}`;
+          break;
+        case 14:
+          stageTitleEl.innerText = "任務終點：Google 密碼驗證解鎖";
+          stageSubEl.innerText = `登入身份：${newEmailFull}`;
+          promptEl.innerText = `🏆 最終考驗：電郵已通過！請依據【${newAgentName}】的學生證，完整輸入 10 碼密碼登入：`;
+          prefillTag.style.display = 'none';
+          inputEl.type = 'password';
+          inputEl.placeholder = `請輸入密碼：${newPassword}`;
+          break;
+      }
+
+      startTimer(stageDuration);
+      inputEl.focus();
+    }
+
+    function registerWrongAttempt(customHintText) {
+      stageWrongCount++;
+      if (stageDeduction < 10) {
+        stageDeduction += 2;
+      }
+
+      if (stageWrongCount >= 5) {
+        const hintBox = document.getElementById('help-hint-box');
+        hintBox.style.display = 'block';
+        hintBox.innerHTML = `💡 <b>特工總部提示：</b>${customHintText || getStageDefaultHint()}`;
+      }
+    }
+
+    function getStageDefaultHint() {
+      switch(currentStage) {
+        case 0: return "請點擊鍵盤地球儀 🌐 切換成英文鍵盤，並輸入 <b>ok</b>！";
+        case 1: return "請輸入小寫英文字母 <b>s</b>！";
+        case 2: return `請輸入學生證上的 6 位學號數字：<b>${primaryUserPart.substring(1)}</b>`;
+        case 3: return "請在格子裏輸入單字 <b>email</b> 證明你分得清欄位！";
+        case 4: return `右側已有預印域名，只打 <b>${primaryUserPart}</b> 即可！不要打 @！`;
+        case 5: return "請直接點擊右下角藍色的【下一步】按鈕！";
+        case 6: return "請在鍵盤符號列中找到並輸入 <b>@</b> 符號！";
+        case 7: return "請輸入真光學校英文縮寫：<b>tlmshkps</b>";
+        case 8: return "請打小數點 <b>.</b>，注意不要打成逗號 <b>,</b>！";
+        case 9: return "密碼開頭是 tl，現在請輸入第一個字母 <b>t</b>！";
+        case 10: return "密碼開頭是 tl，現在請輸入第二個字母 <b>l</b>！";
+        case 11: return `請照著上方學生證，完整打出自己的電郵：<b>${primaryEmailFull}</b>`;
+        case 12: return `請照著上方學生證，完整輸入自己的密碼：<b>${primaryPassword}</b>`;
+        case 13: return `請照著新角色學生證，完整打出：<b>${newEmailFull}</b>`;
+        case 14: return `請照著新角色學生證，完整打出密碼：<b>${newPassword}</b>`;
+        default: return "請仔細核對上方學生證上的資訊喔！";
+      }
+    }
+
+    const realInputEl = document.getElementById('agent-real-input');
+    realInputEl.addEventListener('input', function(e) {
+      if (isProcessing || isPaused) return;
+      const val = this.value.trim().toLowerCase();
+      const fb = document.getElementById('feedback-hud');
+      const wrapper = document.getElementById('agent-input-wrapper');
+
+      if (currentStage === 4 && (val.includes('@') || val.includes('tlmshkps'))) {
+        playBeep(false);
+        wrapper.classList.add('shake-error');
+        setTimeout(() => wrapper.classList.remove('shake-error'), 350);
+        registerWrongAttempt(`不要重複打 @！只要輸入 <b>${primaryUserPart}</b> 即可！`);
+        fb.className = 'feedback-hud-bar fb-wrong';
+        fb.innerText = '⚠️ 注意！右邊已印好 @tlmshkps.edu.hk，不要重複打！';
+        this.value = primaryUserPart;
+        return;
+      }
+
+      if (currentStage === 0) {
+        if (val === 'ok') passStage('🎯 成功切換英文鍵盤並輸入 ok！');
+        else if (val.length >= 2) registerWrongAttempt("請切換成英文鍵盤，輸入 ok！");
+      }
+      else if (currentStage === 1) {
+        if (val === 's') passStage('🎯 成功輸入電郵開頭字母 s！');
+        else if (val.length >= 1) registerWrongAttempt("電郵開頭是英文字母 s！");
+      } 
+      else if (currentStage === 2) {
+        if (val === primaryUserPart.substring(1)) passStage('🎯 成功輸入電郵的 6 位帳號數字！');
+        else if (val.length >= 6) registerWrongAttempt(`請核對上方學生證數字：${primaryUserPart.substring(1)}`);
+      }
+      else if (currentStage === 3) {
+        if (val === 'email') passStage('🎯 很好！完全清楚這是電郵格子，絕不放密碼！');
+        else if (val.length >= 5) registerWrongAttempt("請輸入英文單字 email 建立正確觀念！");
+      }
+      else if (currentStage === 4) {
+        if (val === primaryUserPart) passStage('🎯 非常聰明！你沒有重複輸入域名！');
+      } 
+      else if (currentStage === 6) {
+        if (val === '@') passStage('🎯 精準找到電郵必備的 @ 符號！');
+        else if (val.length >= 1) registerWrongAttempt("請在鍵盤中找到並輸入 @ 符號！");
+      } 
+      else if (currentStage === 7) {
+        if (val === 'tlmshkps') passStage('🎯 學校域名縮寫正確！');
+        else if (val.length >= 8 && val !== 'tlmshkps') registerWrongAttempt("請輸入學校英文縮寫：tlmshkps");
+      } 
+      else if (currentStage === 8) {
+        if (val === '.') passStage('🎯 成功打出網域點號 (.)！');
+        else if (val.length >= 1) registerWrongAttempt("注意要打點號 . 不是逗號 , 喔！");
+      } 
+      else if (currentStage === 9) {
+        if (val === 't') passStage('🎯 成功進入密碼頁，密碼開頭字母 t 正確！');
+        else if (val.length >= 1) registerWrongAttempt("密碼開頭第一個字母是 t！");
+      } 
+      else if (currentStage === 10) {
+        if (val === 'l') passStage('🎯 密碼固定開頭 tl 熟練掌握！');
+        else if (val.length >= 1) registerWrongAttempt("密碼開頭第二個字母是 l！");
+      }
+      else if (currentStage === 11) {
+        if (val === primaryEmailFull.toLowerCase()) {
+          passStage('🎉 厲害！自己的學校電郵地址完整無誤！');
+        } else if (val.length >= primaryEmailFull.length && val !== primaryEmailFull.toLowerCase()) {
+          registerWrongAttempt(`請核對學生證電郵：<b>${primaryEmailFull}</b>`);
+        }
+      }
+      else if (currentStage === 12) {
+        if (val === primaryPassword.toLowerCase()) {
+          passStage('🎉 密碼完整輸入正確！熟練度滿分！');
+        } else if (val.length >= 10 && val !== primaryPassword.toLowerCase()) {
+          registerWrongAttempt(`請核對學生證密碼：<b>${primaryPassword}</b>`);
+        }
+      }
+      else if (currentStage === 13) {
+        if (val === newEmailFull.toLowerCase()) {
+          passStage(`🎉 完美！成功為【${newAgentName}】完整輸入整串電郵！`);
+        } else if (val.length >= newEmailFull.length && val !== newEmailFull.toLowerCase()) {
+          registerWrongAttempt(`請仔細核對新角色電郵：<b>${newEmailFull}</b>`);
+        }
+      }
+      else if (currentStage === 14) {
+        if (val === newPassword.toLowerCase()) {
+          passStage(`🏆 大成功！新角色密碼完全正確，成功登入 Google 總部系統！`);
+        } else if (val.length >= 10 && val !== newPassword.toLowerCase()) {
+          registerWrongAttempt(`請核對新角色密碼（tl 開頭共 10 碼）：<b>${newPassword}</b>`);
+        }
+      }
+    });
+
+    realInputEl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleNextClick();
+      }
+    });
+
+    function handleNextClick() {
+      if (isProcessing || isPaused) return;
+
+      if (currentStage === 5) {
+        passStage('🎯 正確點擊下一步，分頁切換至密碼專屬頁！');
+      } else if (currentStage === 11) {
+        const val = realInputEl.value.trim().toLowerCase();
+        if (val === primaryEmailFull.toLowerCase()) {
+          passStage('🎉 厲害！自己的學校電郵地址完整無誤！');
+        } else {
+          registerWrongAttempt(`請完整輸入電郵：${primaryEmailFull}`);
+          const fb = document.getElementById('feedback-hud');
+          fb.className = 'feedback-hud-bar fb-wrong';
+          fb.innerText = '⚠️ 電郵地址尚未完整正確，請再檢查一次！';
+          playBeep(false);
+        }
+      } else if (currentStage === 12) {
+        const val = realInputEl.value.trim().toLowerCase();
+        if (val === primaryPassword.toLowerCase()) {
+          passStage('🎉 密碼完整輸入正確！');
+        } else {
+          registerWrongAttempt(`請完整輸入密碼：${primaryPassword}`);
+          const fb = document.getElementById('feedback-hud');
+          fb.className = 'feedback-hud-bar fb-wrong';
+          fb.innerText = '⚠️ 密碼不正確，請核對上方學生證！';
+          playBeep(false);
+        }
+      } else if (currentStage === 13) {
+        const val = realInputEl.value.trim().toLowerCase();
+        if (val === newEmailFull.toLowerCase()) {
+          passStage(`🎉 完美！成功為【${newAgentName}】輸入完整電郵！`);
+        } else {
+          registerWrongAttempt(`請完整輸入新角色的電郵：${newEmailFull}`);
+          const fb = document.getElementById('feedback-hud');
+          fb.className = 'feedback-hud-bar fb-wrong';
+          fb.innerText = '⚠️ 電郵地址尚未完整正確，請再檢查一次！';
+          playBeep(false);
+        }
+      } else if (currentStage === 14) {
+        const val = realInputEl.value.trim().toLowerCase();
+        if (val === newPassword.toLowerCase()) {
+          passStage(`🏆 大成功！驗證通過，成功登入系統！`);
+        } else {
+          registerWrongAttempt(`請完整輸入新角色的密碼：${newPassword}`);
+          const fb = document.getElementById('feedback-hud');
+          fb.className = 'feedback-hud-bar fb-wrong';
+          fb.innerText = '⚠️ 密碼不正確，請核對上方學生證！';
+          playBeep(false);
+        }
+      } else {
+        registerWrongAttempt();
+        const fb = document.getElementById('feedback-hud');
+        fb.className = 'feedback-hud-bar fb-wrong';
+        fb.innerText = '⚠️ 請先在輸入框完成當前任務要求的內容喔！';
+        playBeep(false);
+      }
+    }
+
+    function passStage(msg) {
+      isProcessing = true;
+      cancelAnimationFrame(animFrameId);
+      playBeep(true);
+
+      const earned = Math.max(0, 10 - stageDeduction);
+      score += earned;
+      document.getElementById('score-text').innerText = score;
+
+      const fb = document.getElementById('feedback-hud');
+      fb.className = 'feedback-hud-bar fb-correct';
+      fb.innerText = `${msg} (+${earned}分)`;
+
+      setTimeout(() => {
+        nextStage();
+      }, 1600);
+    }
+
+    function nextStage() {
+      currentStage++;
+      if (currentStage < 15) {
+        loadStage(currentStage);
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      cancelAnimationFrame(animFrameId);
+      document.getElementById('result-student-info').innerText = `${currentStudentClass} 班 ${currentStudentNum} 號 特工`;
+      document.getElementById('final-score').innerText = score;
+      const titleEl = document.getElementById('final-title');
+      const evalEl = document.getElementById('final-eval');
+
+      if (score >= 140) {
+        titleEl.innerText = "👑 首席網絡特工大師";
+        evalEl.innerText = "太厲害了！你完全掌握了鍵盤切換、電郵與密碼的區別，打字既快速又精準！🏆✨";
+      } else if (score >= 115) {
+        titleEl.innerText = "⚡ 頂尖資安特工菁英";
+        evalEl.innerText = "反應非常靈敏！完整輸入電郵與密碼都難不倒你！🚀👏";
+      } else if (score >= 90) {
+        titleEl.innerText = "🎯 優秀特工射手";
+        evalEl.innerText = "很棒！你已經能順利分辨電郵與密碼的輸入時機，並成功完成整串輸入囉！🌟🎈";
+      } else if (score >= 60) {
+        titleEl.innerText = "⭐ 潛力特工學徒";
+        evalEl.innerText = "表現不錯！記得打字前先切換英文，打整串電郵時符號不要按錯喔！😃🌻";
+      } else {
+        titleEl.innerText = "🌱 勇敢電郵先鋒";
+        evalEl.innerText = "勇敢完成 15 關實戰！再挑戰一次一定可以拿到更高分！💪💖";
+      }
+
+      document.getElementById('result-modal').style.display = 'flex';
+    }
+
+    function restartGame() {
+      document.getElementById('result-modal').style.display = 'none';
+      startGame();
+    }
+  </script>
+</body>
+</html>
