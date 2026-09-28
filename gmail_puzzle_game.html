@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>✉️ Gmail 拼圖小郵差</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-main: #f0f7f4;
+      --card-bg: rgba(255, 255, 255, 0.94);
+      --card-border: #d2ede0;
+      --text-main: #244136;
+      --text-sub: #5c7f71;
+      
+      --accent-mint: #2ec4b6;
+      --accent-green: #38b000;
+      --accent-soft-green: #e8f7f0;
+      --accent-amber: #ff9f1c;
+      --accent-coral: #ff6b6b;
+      --accent-sky: #48cae4;
+      --accent-blue: #1a73e8;
+
+      --gmail-bg: #ffffff;
+      --gmail-border: #dce7e1;
+      --slot-bg: #f8fcfa;
+      --slot-border: #b8e0cf;
+      
+      --piece-bg: #ffffff;
+      --piece-text: #244136;
+      --piece-border: #b2dfdb;
+      --piece-hover: #e0f2f1;
+      
+      --shadow-soft: 0 8px 24px rgba(46, 196, 182, 0.08);
+      --shadow-piece: 0 4px 12px rgba(36, 65, 54, 0.06);
+    }
+
+    body.dark-mode {
+      --bg-main: #13221b;
+      --card-bg: rgba(23, 40, 32, 0.94);
+      --card-border: #2e5342;
+      --text-main: #e8f5ef;
+      --text-sub: #9fbfb0;
+
+      --accent-mint: #48cae4;
+      --accent-green: #52b788;
+      --accent-soft-green: #1b382b;
+      --accent-amber: #f7b267;
+      --accent-coral: #f28482;
+      --accent-sky: #70d6ff;
+      --accent-blue: #4ea8de;
+
+      --gmail-bg: #1c3027;
+      --gmail-border: #315344;
+      --slot-bg: #15261f;
+      --slot-border: #3d6754;
+
+      --piece-bg: #223c30;
+      --piece-text: #e8f5ef;
+      --piece-border: #3d6754;
+      --piece-hover: #2b4c3e;
+
+      --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.25);
+      --shadow-piece: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Quicksand', 'Noto Sans TC', -apple-system, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(var(--card-border) 1.2px, transparent 1.2px),
+        radial-gradient(var(--card-border) 1.2px, var(--bg-main) 1.2px);
+      background-size: 28px 28px;
+      background-position: 0 0, 14px 14px;
+      opacity: 0.7;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      width: 85vw;
+      height: 85vh;
+      max-width: 1200px;
+      max-height: 860px;
+      margin: auto;
+      padding: 12px 18px;
+      justify-content: space-between;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      width: 100%;
+    }
+    .header-left, .header-right, .header-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+      box-shadow: var(--shadow-piece);
+      font-family: 'Fredoka', 'Quicksand', sans-serif;
+    }
+    .student-badge { color: var(--accent-mint); }
+    .progress-badge { color: var(--text-main); }
+    .score-badge { color: var(--accent-amber); }
+    .timer-badge { color: var(--accent-coral); min-width: 80px; text-align: center; }
+
+    .nav-btn {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: var(--shadow-piece);
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:active { transform: scale(0.96); }
+    .btn-pause { color: var(--accent-amber); }
+    .btn-stop { color: var(--accent-coral); }
+
+    #timer-bar-container {
+      width: 100%;
+      height: 7px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 6px;
+      margin: 6px 0 8px 0;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #timer-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-mint), var(--accent-green));
+      border-radius: 6px;
+      transform-origin: left center;
+      will-change: width;
+      transition: background 0.3s;
+    }
+
+    #help-hint-box {
+      display: none;
+      background: #fff8eb;
+      border: 2px dashed var(--accent-amber);
+      border-radius: 12px;
+      padding: 6px 14px;
+      margin-bottom: 8px;
+      color: #b45309;
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: center;
+      animation: pulseGlow 1.6s infinite alternate;
+    }
+    body.dark-mode #help-hint-box {
+      background: #2b2111;
+      color: #fcd34d;
+    }
+    @keyframes pulseGlow {
+      from { box-shadow: 0 0 4px rgba(255, 159, 28, 0.2); }
+      to { box-shadow: 0 0 16px rgba(255, 159, 28, 0.45); }
+    }
+
+    /* 中央遊戲舞台：左為題目與選項區，右為 Gmail 視窗 */
+    #game-stage {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    /* 左側：題目指示 + 拼圖碎片抽屜 */
+    #left-task-panel {
+      flex: 1.1;
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 20px;
+      box-shadow: var(--shadow-soft);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      backdrop-filter: blur(12px);
+      min-height: 0;
+    }
+
+    /* 題目說明區塊（放置在左邊最上方，方便閱讀） */
+    #task-banner-left {
+      background: var(--slot-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .task-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--accent-mint);
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    }
+    .task-desc {
+      font-size: 1.05rem;
+      color: var(--text-main);
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .drawer-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--accent-mint);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1.5px solid var(--card-border);
+      padding-bottom: 4px;
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    }
+
+    .pieces-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      overflow-y: auto;
+      padding: 2px 4px;
+    }
+
+    .puzzle-piece {
+      background: var(--piece-bg);
+      color: var(--piece-text);
+      border: 2px solid var(--piece-border);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-piece);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .puzzle-piece:hover {
+      transform: translateY(-2px);
+      background: var(--piece-hover);
+      border-color: var(--accent-mint);
+    }
+    .puzzle-piece:active {
+      transform: scale(0.97);
+    }
+    .piece-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    /* 右側：Gmail 視窗底板 */
+    #gmail-board {
+      flex: 1.35;
+      background: var(--gmail-bg);
+      border: 1.5px solid var(--gmail-border);
+      border-radius: 20px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 18px;
+      position: relative;
+      min-height: 0;
+    }
+
+    .gmail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid var(--gmail-border);
+      margin-bottom: 8px;
+    }
+    .gmail-header-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    }
+
+    /* 頂部輔助功能按鈕列 (收件匣、星號、密件抄送、關閉等) */
+    .gmail-toolbar-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+    .tool-icon-btn {
+      background: var(--slot-bg);
+      border: 1px solid var(--slot-border);
+      padding: 3px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tool-icon-btn.highlight-tool {
+      border-color: var(--accent-mint);
+      background: var(--accent-soft-green);
+      color: var(--accent-mint);
+      box-shadow: 0 0 8px rgba(46, 196, 182, 0.35);
+    }
+
+    .slot-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+    .slot-label {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      width: 65px;
+      flex-shrink: 0;
+    }
+    .puzzle-slot {
+      flex: 1;
+      background: var(--slot-bg);
+      border: 2px dashed var(--slot-border);
+      border-radius: 12px;
+      min-height: 38px;
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .puzzle-slot.active-target {
+      border-color: var(--accent-mint);
+      background: var(--accent-soft-green);
+      box-shadow: 0 0 10px rgba(46, 196, 182, 0.2);
+    }
+    .puzzle-slot.slot-filled {
+      border-style: solid;
+      border-color: var(--accent-green);
+      background: var(--accent-soft-green);
+    }
+    .slot-placeholder {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      font-style: italic;
+    }
+
+    .puzzle-slot-body {
+      flex: 1;
+      background: var(--slot-bg);
+      border: 2px dashed var(--slot-border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 8px;
+      overflow-y: auto;
+      min-height: 120px;
+    }
+
+    .body-line-slot {
+      background: var(--card-bg);
+      border: 1px dashed var(--slot-border);
+      border-radius: 10px;
+      padding: 5px 10px;
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+    .body-line-slot.filled {
+      border-style: solid;
+      border-color: var(--accent-green);
+      background: var(--accent-soft-green);
+      font-weight: 700;
+    }
+
+    /* 底部操作與工具列 */
+    .gmail-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1.5px solid var(--gmail-border);
+    }
+    .footer-left-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .send-slot {
+      min-width: 100px;
+      height: 36px;
+      border: 2px dashed var(--slot-border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--text-sub);
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .send-slot.active-send {
+      background: var(--accent-blue);
+      border: none;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+      cursor: pointer;
+    }
+    .send-slot.active-send:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .gmail-action-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-sub);
+      font-size: 1.05rem;
+    }
+    .action-icon-chip {
+      background: var(--slot-bg);
+      border: 1px solid var(--slot-border);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      cursor: default;
+    }
+    .action-icon-chip.active-highlight {
+      border-color: var(--accent-mint);
+      background: var(--accent-soft-green);
+      color: var(--accent-mint);
+      box-shadow: 0 0 10px rgba(46, 196, 182, 0.3);
+      font-weight: 700;
+    }
+
+    .fitted-tag {
+      background: linear-gradient(135deg, var(--accent-mint), #25a195);
+      color: #ffffff;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .feedback-hud-bar {
+      margin-top: 6px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      min-height: 26px;
+      text-align: center;
+    }
+    .fb-correct { color: var(--accent-green); }
+    .fb-wrong { color: var(--accent-coral); }
+
+    .overlay-modal {
+      position: absolute;
+      inset: 0;
+      background: var(--card-bg);
+      backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      z-index: 50;
+      text-align: center;
+      padding: 24px;
+      box-shadow: var(--shadow-soft);
+    }
+    .modal-top-bar {
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 6px;
+    }
+    .modal-title {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: var(--accent-mint);
+      margin-bottom: 14px;
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    }
+
+    .student-select-card {
+      background: var(--slot-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 16px;
+      padding: 14px 20px;
+      max-width: 540px;
+      width: 100%;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+    .select-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .custom-select {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1.5px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .rules-card {
+      background: var(--slot-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px 22px;
+      max-width: 540px;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--text-main);
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+    .rules-card b { color: var(--accent-mint); }
+
+    .score-banner {
+      font-size: 3.4rem;
+      font-weight: 800;
+      color: var(--accent-amber);
+      margin: 8px 0;
+      font-family: 'Fredoka', sans-serif;
+    }
+    .agent-title {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent-mint), #20998e);
+      color: #ffffff;
+      padding: 8px 24px;
+      border-radius: 16px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      font-family: 'Fredoka', sans-serif;
+    }
+    .eval-msg {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+      line-height: 1.45;
+      margin-bottom: 18px;
+      max-width: 460px;
+      font-weight: 600;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .action-btn {
+      border: none;
+      padding: 12px 28px;
+      border-radius: 14px;
+      font-size: 1.12rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    }
+    .btn-start   { background: linear-gradient(135deg, var(--accent-mint), #22a094); box-shadow: 0 4px 12px rgba(46, 196, 182, 0.3); }
+    .btn-resume  { background: linear-gradient(135deg, var(--accent-sky), var(--accent-blue)); }
+    .btn-settle  { background: linear-gradient(135deg, var(--accent-amber), #ea8c0b); }
+    .btn-restart { background: linear-gradient(135deg, var(--accent-mint), #22a094); }
+    .btn-home    { background: #e2ede8; color: var(--text-main); }
+    body.dark-mode .btn-home { background: #284437; color: var(--text-main); }
+    .btn-danger  { background: linear-gradient(135deg, var(--accent-coral), #e85050); }
+
+    @media (max-width: 860px) {
+      #app-container { width: 94vw; height: 94vh; padding: 8px; }
+      #game-stage { flex-direction: column; }
+      #left-task-panel { flex: 1.1; }
+      #gmail-board { flex: 1.3; }
+      .task-title { font-size: 1.1rem; }
+      .task-desc { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+    
+    <!-- 1. 遊戲首頁說明彈窗 -->
+    <div id="intro-modal" class="overlay-modal">
+      <div class="modal-top-bar">
+        <button class="nav-btn" onclick="toggleTheme()"><span class="theme-btn-text">🌙 深色</span></button>
+      </div>
+
+      <h1 class="modal-title">✉️ Gmail 拼圖小郵差</h1>
+      
+      <div class="student-select-card">
+        <div class="select-item">
+          <label for="select-class">班別：</label>
+          <select id="select-class" class="custom-select">
+            <option value="3A">3A</option>
+            <option value="3B">3B</option>
+            <option value="3C">3C</option>
+            <option value="3D">3D</option>
+          </select>
+        </div>
+        <div class="select-item">
+          <label for="select-num">學號：</label>
+          <select id="select-num" class="custom-select"></select>
+        </div>
+      </div>
+
+      <div class="rules-card">
+        <div>📖 <b>題目在左邊：</b>請先在<b>左側頂部</b>閱讀任務，再挑選下方的拼圖碎片！</div>
+        <div>🔘 <b>更多實用按鈕：</b>新增了「📎 迴紋針附件」、「🗑️ 捨棄草稿」等功能認識題！</div>
+        <div>🎲 <b>隨機主題：</b>共 12 關，題目主題與干擾選項每次隨機更換！</div>
+        <div>💌 <b>完成寄信：</b>拼合收件者、主旨與書信四要素，成功發射郵件！</div>
+      </div>
+
+      <div class="btn-group">
+        <a href="index.html" class="action-btn btn-home">🏠 返回基地</a>
+        <button class="action-btn btn-start" onclick="startGame()">🌱 開始送信挑戰</button>
+      </div>
+    </div>
+
+    <!-- 2. 暫停彈窗 -->
+    <div id="pause-modal" class="overlay-modal" style="display: none;">
+      <h1 class="modal-title">⏸️ 郵件暫停中</h1>
+      <div class="btn-group">
+        <button class="action-btn btn-resume" onclick="resumeGame()">▶️ 繼續作答</button>
+        <button class="action-btn btn-settle" onclick="confirmEarlySettle()">📊 結算成績</button>
+        <a href="index.html" class="action-btn btn-home">🏠 回任務基地</a>
+      </div>
+    </div>
+
+    <!-- 3. 結束確認彈窗 -->
+    <div id="stop-modal" class="overlay-modal" style="display: none;">
+      <h1 class="modal-title">⏹️ 結束挑戰</h1>
+      <div class="btn-group">
+        <button class="action-btn btn-settle" onclick="confirmEarlySettle()">📊 結算分數</button>
+        <button class="action-btn btn-resume" onclick="closeStopModal()">▶️ 繼續挑戰</button>
+        <a href="index.html" class="action-btn btn-danger">🏠 直接離開</a>
+      </div>
+    </div>
+
+    <!-- 頂部導航列 -->
+    <header>
+      <div class="header-left">
+        <a href="index.html" class="nav-btn">🏠 基地</a>
+        <button class="nav-btn" onclick="toggleTheme()"><span class="theme-btn-text">🌙 深色</span></button>
+        <div class="badge student-badge" id="student-badge-display">3A (1號)</div>
+      </div>
+      <div class="header-center">
+        <div class="badge progress-badge"><span id="q-idx-text">第 1 關</span> / 共 12 關</div>
+      </div>
+      <div class="header-right">
+        <div class="badge score-badge">⭐ <span id="score-text">0</span> 分</div>
+        <div class="badge timer-badge">⏱️ <span id="timer-text">30</span>s</div>
+        <button class="nav-btn btn-pause" onclick="pauseGame()">⏸️ 暫停</button>
+        <button class="nav-btn btn-stop" onclick="openStopModal()">⏹️ 結束</button>
+      </div>
+    </header>
+
+    <div id="timer-bar-container">
+      <div id="timer-bar-fill"></div>
+    </div>
+
+    <div id="help-hint-box"></div>
+
+    <!-- 中央舞台：左邊為題目與選擇、右邊為郵件視窗 -->
+    <div id="game-stage">
+      
+      <!-- 左側：題目指示 + 拼圖碎片抽屜 -->
+      <div id="left-task-panel">
+        <!-- 題目指示（置於左側上方，視線第一落點） -->
+        <div id="task-banner-left">
+          <div class="task-title" id="task-stage-title">關卡載入中...</div>
+          <div class="task-desc" id="task-instruction">請閱讀此處指引完成任務</div>
+        </div>
+
+        <div class="drawer-title">
+          <span>🧩</span> 點選正確的拼圖碎片
+        </div>
+        <div class="pieces-container" id="pieces-box">
+          <!-- 動態載入碎片 -->
+        </div>
+      </div>
+
+      <!-- 右側：Gmail 視窗底板 -->
+      <div id="gmail-board">
+        <div class="gmail-header">
+          <div class="gmail-header-title">
+            <span style="color:#ea4335;">✉️</span> 新郵件 (Gmail)
+          </div>
+          <div class="gmail-toolbar-top">
+            <span class="tool-icon-btn" id="top-tool-minimize">一 最小化</span>
+            <span class="tool-icon-btn" id="top-tool-close">✕ 關閉</span>
+          </div>
+        </div>
+
+        <!-- 槽位 1：收件者 -->
+        <div class="slot-row">
+          <div class="slot-label">收件者：</div>
+          <div class="puzzle-slot" id="slot-to">
+            <span class="slot-placeholder" id="placeholder-to">點選左側電郵碎片填入...</span>
+          </div>
+        </div>
+
+        <!-- 槽位 2：主旨 -->
+        <div class="slot-row">
+          <div class="slot-label">主旨：</div>
+          <div class="puzzle-slot" id="slot-subject">
+            <span class="slot-placeholder" id="placeholder-subject">點選左側主旨碎片填入...</span>
+          </div>
+        </div>
+
+        <!-- 槽位 3：郵件內容 (書信 4 階) -->
+        <div class="puzzle-slot-body" id="slot-body">
+          <div class="body-line-slot" id="body-salutation">
+            <span class="slot-placeholder">【稱謂】（例：陳老師你好：）</span>
+          </div>
+          <div class="body-line-slot" id="body-content">
+            <span class="slot-placeholder">【正文】（信件主要內容）</span>
+          </div>
+          <div class="body-line-slot" id="body-wishes">
+            <span class="slot-placeholder">【祝號】（例：祝 身體健康）</span>
+          </div>
+          <div class="body-line-slot" id="body-signature">
+            <span class="slot-placeholder">【署名】（學生姓名與班別）</span>
+          </div>
+        </div>
+
+        <!-- 槽位 4：傳送與底部工具列 -->
+        <div class="gmail-footer">
+          <div class="footer-left-tools">
+            <div class="send-slot" id="slot-send">傳送 (未就緒)</div>
+            <div class="gmail-action-icons">
+              <span class="action-icon-chip" id="tool-attach">📎 附件</span>
+              <span class="action-icon-chip" id="tool-trash">🗑️ 捨棄草稿</span>
+            </div>
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-sub);">真光安全郵件系統</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 反饋訊息 -->
+    <div class="feedback-hud-bar" id="feedback-hud"></div>
+
+    <!-- 結算畫面 -->
+    <div id="result-modal" class="overlay-modal" style="display: none;">
+      <h1 class="modal-title">🎉 郵件任務全數通關！</h1>
+      <div style="font-size:1.3rem; font-weight:700; color:var(--text-sub);" id="result-student-info">3A 班 1 號小郵差</div>
+      <div class="score-banner"><span id="final-score">0</span> <span style="font-size:1.5rem; color:var(--text-main);">分</span></div>
+      <div class="agent-title" id="final-title">👑 金牌小郵差</div>
+      <div class="eval-msg" id="final-eval">表現優異！</div>
+      <div class="btn-group">
+        <button class="action-btn btn-restart" onclick="restartGame()">🔄 再玩一次（隨機換題）</button>
+        <a href="index.html" class="action-btn btn-home">🏠 返回任務基地</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const selectNumEl = document.getElementById('select-num');
+    for (let i = 1; i <= 40; i++) {
+      const opt = document.createElement('option');
+      opt.value = i.toString();
+      opt.textContent = `${i} 號`;
+      selectNumEl.appendChild(opt);
+    }
+
+    let currentStage = 0;
+    let score = 0;
+    let stageDeduction = 0;
+    let stageWrongCount = 0;
+    let isProcessing = false;
+    let isPaused = false;
+    let currentStudentClass = "3A";
+    let currentStudentNum = "1";
+
+    const TIME_LIMIT = 30;
+    let timeLeftMs = TIME_LIMIT * 1000;
+    let lastTimestamp = null;
+    let animFrameId = null;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(success) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (success) {
+        osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1040, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.14);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.14);
+      } else {
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      const label = isDark ? '☀️ 淺色' : '🌙 深色';
+      document.querySelectorAll('.theme-btn-text').forEach(el => el.innerText = label);
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    /* 豐富的主題要素池 */
+    const TOPIC_PRESETS = [
+      {
+        recipientName: "陳老師",
+        recipientPrefix: "chan_teacher",
+        recipientEmail: "chan_teacher@tlmshkps.edu.hk",
+        subjectGood: "3A 陳大文 - 電腦課請假查詢",
+        subjectBadLong: "陳老師你好我是大文我明天請假不上電腦課了因為感冒",
+        salutation: "陳老師你好：",
+        bodyText: "我想查詢明天電腦課需要帶備的用品，謝謝老師。",
+        wishes: "祝  教安 / 身體健康",
+        signature: "學生 陳大文 敬上"
+      },
+      {
+        recipientName: "李老師",
+        recipientPrefix: "lee_teacher",
+        recipientEmail: "lee_teacher@tlmshkps.edu.hk",
+        subjectGood: "3A 李小芬 - 常識科參觀回條",
+        subjectBadLong: "李老師我想交回常識科參觀科學館的家長回條謝謝您",
+        salutation: "李老師你好：",
+        bodyText: "我已附上下週參觀香港科學館的電子家長回條，請老師查收。",
+        wishes: "祝  工作順利",
+        signature: "學生 李小芬 敬上"
+      },
+      {
+        recipientName: "王校長",
+        recipientPrefix: "principal_wong",
+        recipientEmail: "principal_wong@tlmshkps.edu.hk",
+        subjectGood: "3A 黃子軒 - 學生會圖書角建議書",
+        subjectBadLong: "校長你好我想建議在學校的圖書館旁邊增加很多童話書",
+        salutation: "敬愛的校長：",
+        bodyText: "我們希望能在走廊圖書角增加科技與繪本科普書籍，豐富課餘閱讀。",
+        wishes: "祝  教祺 / 萬事如意",
+        signature: "學生 黃子軒 敬上"
+      },
+      {
+        recipientName: "張主任",
+        recipientPrefix: "cheung_head",
+        recipientEmail: "cheung_head@tlmshkps.edu.hk",
+        subjectGood: "3A 張小強 - 科技節機械人隊報名",
+        subjectBadLong: "張主任我想參加機械人校隊我想問幾時面試我很想去",
+        salutation: "張主任你好：",
+        bodyText: "我想報名參加本學期的校園科技節機械人編程隊伍，謝謝主任。",
+        wishes: "祝  身體健康",
+        signature: "學生 張小強 敬上"
+      }
+    ];
+
+    let currentTopic = TOPIC_PRESETS[0];
+    let STAGES_DATA = [];
+
+    // 動態組裝 12 關卡（新增 2 個按鈕功能學習題，全部隨機配置）
+    function buildStagesData() {
+      currentTopic = TOPIC_PRESETS[Math.floor(Math.random() * TOPIC_PRESETS.length)];
+      const randNum = Math.floor(10000000 + Math.random() * 90000000);
+      const fakePwd = `tl${randNum}`;
+
+      // 隨機題庫要素池：多出的兩個功能按鈕題
+      const extraButtonQuestions = [
+        {
+          title: "按鈕認識：附件夾帶",
+          instruction: "想把電腦裏的作業相片或工作紙一起寄出，要點哪一個按鈕？",
+          targetSlot: "tool-attach",
+          pieces: shuffleArray([
+            { text: "📎 迴紋針圖示 (附加檔案)", correct: true, feedback: "答對了！迴紋針能將相片或檔案夾帶在郵件裏！" },
+            { text: "🗑️ 垃圾桶 (刪除郵件)", correct: false, feedback: "垃圾桶會把整封信刪掉喔！" },
+            { text: "⭐ 星號 (加上標記)", correct: false, feedback: "星號是用來標記重要郵件的！" }
+          ]),
+          hint: "請挑選外形像「迴紋針 📎」的附加檔案按鈕！"
+        },
+        {
+          title: "按鈕認識：放棄重寫",
+          instruction: "如果發現整封信內容全打錯了，想直接作廢刪除，按哪一個按鈕？",
+          targetSlot: "tool-trash",
+          pieces: shuffleArray([
+            { text: "🗑️ 垃圾桶 (捨棄草稿)", correct: true, feedback: "沒錯！垃圾桶按鈕可以立刻刪除不需要的草稿！" },
+            { text: "🚀 傳送 (Send)", correct: false, feedback: "按傳送會把錯誤的信寄出去喔！" },
+            { text: "📎 附件", correct: false, feedback: "這是上傳附加檔案的按鈕！" }
+          ]),
+          hint: "請選象徵丟棄的「垃圾桶 🗑️」圖示！"
+        }
+      ];
+
+      // 12 關完整序列
+      STAGES_DATA = [
+        {
+          title: "第 1 關：開啟新信件",
+          instruction: "請看右側郵件視窗，在左邊挑出 Gmail 寄信必備的「撰寫」按鈕碎片：",
+          targetSlot: null,
+          pieces: shuffleArray([
+            { text: "✏️ ＋ 撰寫 (Compose)", correct: true, feedback: "找到正確按鈕！開啟新郵件視窗！" },
+            { text: "📥 收件匣 (Inbox)", correct: false, feedback: "這是查看別人來信的收件匣喔！" },
+            { text: "🗑️ 垃圾桶 (Trash)", correct: false, feedback: "這是刪除信件的垃圾桶！" }
+          ]),
+          hint: "請點選有彩色加號或鉛筆圖示的「＋ 撰寫」按鈕！"
+        },
+        {
+          title: "第 2 關：收件者欄位",
+          instruction: `要寄信給【${currentTopic.recipientName}】，右側收件者欄位應該填入甚麼？`,
+          targetSlot: "slot-to",
+          pieces: shuffleArray([
+            { text: currentTopic.recipientEmail, correct: true, feedback: "答對了！收件者只能填寫電郵地址！", renderText: currentTopic.recipientEmail },
+            { text: `${fakePwd} (密碼)`, correct: false, feedback: "⚠️ 警告！這是機密密碼，絕不能放在收件者！" },
+            { text: "老師你好我想問功課 (信件內容)", correct: false, feedback: "⚠️ 這是信件內容，不能放在收件者！" }
+          ]),
+          hint: `請選有 @tlmshkps.edu.hk 的【${currentTopic.recipientName}】電郵地址！`
+        },
+        {
+          title: "第 3 關：學校域名拼合",
+          instruction: `收件者只打了「${currentTopic.recipientPrefix}」，還缺少甚麼關鍵拼圖？`,
+          targetSlot: "slot-to",
+          pieces: shuffleArray([
+            { text: "@tlmshkps.edu.hk", correct: true, feedback: "拼圖成功！完整補全真光學校電郵域名！", renderText: currentTopic.recipientEmail },
+            { text: "#tlmshkps.com", correct: false, feedback: "符號錯了！電郵一定要用 @ 符號喔！" },
+            { text: ".edu.hk (缺少@和校名縮寫)", correct: false, feedback: "缺少了關鍵的 @ 符號與學校縮寫！" }
+          ]),
+          hint: "請選以「@」開頭的真光學校域名 @tlmshkps.edu.hk！"
+        },
+        // 新增的按鈕功能題 1：附件按鈕
+        {
+          title: "第 4 關：按鈕認知 (附加檔案)",
+          instruction: extraButtonQuestions[0].instruction,
+          targetSlot: extraButtonQuestions[0].targetSlot,
+          pieces: extraButtonQuestions[0].pieces,
+          hint: extraButtonQuestions[0].hint
+        },
+        {
+          title: "第 5 關：挑選合適主旨",
+          instruction: "哪一個是簡潔、有禮、包含班別姓名的「主旨」拼圖？",
+          targetSlot: "slot-subject",
+          pieces: shuffleArray([
+            { text: currentTopic.subjectGood, correct: true, feedback: "標準主旨！有班別、姓名與具體事由！", renderText: currentTopic.subjectGood },
+            { text: currentTopic.subjectBadLong, correct: false, feedback: "⚠️ 太長了！這是內容，主旨只需簡短標題！" },
+            { text: "（留空不寫主旨）", correct: false, feedback: "⚠️ 沒寫主旨很不禮貌，收件人不知道這是甚麼信！" }
+          ]),
+          hint: "選擇有「班別 + 姓名 + 簡短事由」的清晰碎片！"
+        },
+        {
+          title: "第 6 關：書信禮儀（稱謂）",
+          instruction: "進入信件內容！第一行必須放上甚麼禮貌稱謂？",
+          targetSlot: "body-salutation",
+          pieces: shuffleArray([
+            { text: currentTopic.salutation, correct: true, feedback: "正確！向師長問好的禮貌稱謂！", renderText: currentTopic.salutation },
+            { text: currentTopic.wishes, correct: false, feedback: "這是信件結尾的祝號喔！" },
+            { text: currentTopic.signature, correct: false, feedback: "這是信件最後的署名！" }
+          ]),
+          hint: `請選擇最頂部的禮貌打招呼「${currentTopic.salutation}」！`
+        },
+        {
+          title: "第 7 關：書信內容（正文）",
+          instruction: "稱謂之後，接著放入交代具體事情的正文：",
+          targetSlot: "body-content",
+          pieces: shuffleArray([
+            { text: currentTopic.bodyText, correct: true, feedback: "清楚簡明的正文內容！", renderText: currentTopic.bodyText },
+            { text: currentTopic.recipientEmail, correct: false, feedback: "這是電郵地址，不屬於正文！" },
+            { text: `密碼 ${fakePwd}`, correct: false, feedback: "千萬不要把密碼發給別人！" }
+          ]),
+          hint: "請選擇交代具體事情的完整句子！"
+        },
+        {
+          title: "第 8 關：書信禮儀（祝號）",
+          instruction: "正文交代完畢，接著嵌入祝福語（祝號）：",
+          targetSlot: "body-wishes",
+          pieces: shuffleArray([
+            { text: currentTopic.wishes, correct: true, feedback: "禮貌滿分！為師長送上祝號！", renderText: currentTopic.wishes },
+            { text: "喂，收到記得快點回覆！", correct: false, feedback: "這太沒禮貌了！絕對不能這樣寫！" },
+            { text: "3A班 1號", correct: false, feedback: "這是個人資料，祝號應是祝福詞！" }
+          ]),
+          hint: "請選帶有祝福詞的「祝 ...」碎片！"
+        },
+        {
+          title: "第 9 關：書信禮儀（署名）",
+          instruction: "信件最末端，放上寄信人的身分署名：",
+          targetSlot: "body-signature",
+          pieces: shuffleArray([
+            { text: currentTopic.signature, correct: true, feedback: "署名完成！讓師長清楚知道寄信人是誰！", renderText: currentTopic.signature },
+            { text: "一個不想透露名字的小朋友", correct: false, feedback: "老師不知道是誰寄的就無法回覆你囉！" },
+            { text: `${fakePwd}`, correct: false, feedback: "再提醒一次：絕不能在信中填寫密碼！" }
+          ]),
+          hint: "請選包含學生姓名與敬辭的署名碎片！"
+        },
+        // 新增的按鈕功能題 2：捨棄草稿按鈕
+        {
+          title: "第 10 關：按鈕認知 (捨棄草稿)",
+          instruction: extraButtonQuestions[1].instruction,
+          targetSlot: extraButtonQuestions[1].targetSlot,
+          pieces: extraButtonQuestions[1].pieces,
+          hint: extraButtonQuestions[1].hint
+        },
+        {
+          title: "第 11 關：發射器核對",
+          instruction: "整封信已拼裝完畢，請確認缺少甚麼重要啟動器？",
+          targetSlot: "slot-send",
+          pieces: shuffleArray([
+            { text: "🚀 傳送 (Send) 按鈕拼圖", correct: true, feedback: "組裝完成！傳送按鈕已啟動！" },
+            { text: "🗑️ 放棄草稿 (捨棄信件)", correct: false, feedback: "按這個會把整封寫好的信刪除喔！" },
+            { text: "🌐 切換輸入法", correct: false, feedback: "文字已經拼好，現在準備要送出信件！" }
+          ]),
+          hint: "請選能把信件寄出的「傳送 (Send)」按鈕！"
+        },
+        {
+          title: "第 12 關：發射信件！",
+          instruction: "所有拼圖卡扣齊全！請點擊右邊視窗左下角的藍色【傳送】發送：",
+          targetSlot: "btn-send-click",
+          pieces: [],
+          hint: "請直接點擊右側郵件視窗左下角發光的藍色「🚀 點我傳送」按鈕！"
+        }
+      ];
+    }
+
+    function startGame() {
+      currentStudentClass = document.getElementById('select-class').value;
+      currentStudentNum = document.getElementById('select-num').value;
+      document.getElementById('student-badge-display').innerText = `${currentStudentClass} (${currentStudentNum}號)`;
+
+      document.getElementById('intro-modal').style.display = 'none';
+      document.getElementById('pause-modal').style.display = 'none';
+      document.getElementById('stop-modal').style.display = 'none';
+
+      currentStage = 0;
+      score = 0;
+      isPaused = false;
+      document.getElementById('score-text').innerText = score;
+      
+      buildStagesData();
+      resetBoardUI();
+      loadStage(0);
+    }
+
+    function resetBoardUI() {
+      document.getElementById('slot-to').innerHTML = '<span class="slot-placeholder" id="placeholder-to">點選左側電郵碎片填入...</span>';
+      document.getElementById('slot-to').className = 'puzzle-slot';
+      document.getElementById('slot-subject').innerHTML = '<span class="slot-placeholder" id="placeholder-subject">點選左側主旨碎片填入...</span>';
+      document.getElementById('slot-subject').className = 'puzzle-slot';
+
+      document.getElementById('body-salutation').innerHTML = '<span class="slot-placeholder">【稱謂】（例：陳老師你好：）</span>';
+      document.getElementById('body-salutation').className = 'body-line-slot';
+      document.getElementById('body-content').innerHTML = '<span class="slot-placeholder">【正文】（信件主要內容）</span>';
+      document.getElementById('body-content').className = 'body-line-slot';
+      document.getElementById('body-wishes').innerHTML = '<span class="slot-placeholder">【祝號】（例：祝 身體健康）</span>';
+      document.getElementById('body-wishes').className = 'body-line-slot';
+      document.getElementById('body-signature').innerHTML = '<span class="slot-placeholder">【署名】（學生姓名與班別）</span>';
+      document.getElementById('body-signature').className = 'body-line-slot';
+
+      document.getElementById('tool-attach').classList.remove('active-highlight');
+      document.getElementById('tool-trash').classList.remove('active-highlight');
+
+      const sendSlot = document.getElementById('slot-send');
+      sendSlot.className = 'send-slot';
+      sendSlot.innerText = '傳送 (未就緒)';
+      sendSlot.onclick = null;
+    }
+
+    function pauseGame() {
+      if (isProcessing) return;
+      isPaused = true;
+      cancelAnimationFrame(animFrameId);
+      document.getElementById('pause-modal').style.display = 'flex';
+    }
+
+    function resumeGame() {
+      document.getElementById('pause-modal').style.display = 'none';
+      isPaused = false;
+      lastTimestamp = performance.now();
+      animFrameId = requestAnimationFrame(timerStep);
+    }
+
+    function openStopModal() {
+      if (isProcessing) return;
+      isPaused = true;
+      cancelAnimationFrame(animFrameId);
+      document.getElementById('stop-modal').style.display = 'flex';
+    }
+
+    function closeStopModal() {
+      document.getElementById('stop-modal').style.display = 'none';
+      isPaused = false;
+      lastTimestamp = performance.now();
+      animFrameId = requestAnimationFrame(timerStep);
+    }
+
+    function confirmEarlySettle() {
+      document.getElementById('pause-modal').style.display = 'none';
+      document.getElementById('stop-modal').style.display = 'none';
+      showResult();
+    }
+
+    function startTimer() {
+      cancelAnimationFrame(animFrameId);
+      timeLeftMs = TIME_LIMIT * 1000;
+      lastTimestamp = performance.now();
+      updateTimerDisplay();
+      animFrameId = requestAnimationFrame(timerStep);
+    }
+
+    function timerStep(now) {
+      if (isPaused || isProcessing) return;
+      const delta = now - lastTimestamp;
+      lastTimestamp = now;
+      timeLeftMs = Math.max(0, timeLeftMs - delta);
+      updateTimerDisplay();
+
+      if (timeLeftMs <= 0) {
+        handleTimeout();
+      } else {
+        animFrameId = requestAnimationFrame(timerStep);
+      }
+    }
+
+    function updateTimerDisplay() {
+      const sec = Math.ceil(timeLeftMs / 1000);
+      document.getElementById('timer-text').innerText = sec;
+      const fill = document.getElementById('timer-bar-fill');
+      const pct = (timeLeftMs / (TIME_LIMIT * 1000)) * 100;
+      fill.style.width = pct + '%';
+
+      if (pct <= 25) {
+        fill.style.background = 'var(--accent-coral)';
+      } else if (pct <= 50) {
+        fill.style.background = 'var(--accent-amber)';
+      } else {
+        fill.style.background = 'linear-gradient(90deg, var(--accent-mint), var(--accent-green))';
+      }
+    }
+
+    function handleTimeout() {
+      isProcessing = true;
+      cancelAnimationFrame(animFrameId);
+      playBeep(false);
+
+      const fb = document.getElementById('feedback-hud');
+      fb.className = 'feedback-hud-bar fb-wrong';
+      fb.innerText = `⏱️ 時間到！看清楚題目提示再試一次！（+0分）`;
+
+      setTimeout(() => {
+        nextStage();
+      }, 2000);
+    }
+
+    function loadStage(idx) {
+      isProcessing = false;
+      stageDeduction = 0;
+      stageWrongCount = 0;
+
+      const data = STAGES_DATA[idx];
+      document.getElementById('q-idx-text').innerText = `第 ${idx + 1} 關`;
+      document.getElementById('task-stage-title').innerText = data.title;
+      document.getElementById('task-instruction').innerText = data.instruction;
+
+      const fb = document.getElementById('feedback-hud');
+      fb.className = 'feedback-hud-bar';
+      fb.innerText = '';
+
+      const hintBox = document.getElementById('help-hint-box');
+      hintBox.style.display = 'none';
+      hintBox.innerText = '';
+
+      // 高亮右側目標卡槽或按鈕
+      document.querySelectorAll('.puzzle-slot, .body-line-slot, .send-slot, .action-icon-chip').forEach(el => {
+        el.classList.remove('active-target', 'active-highlight');
+      });
+
+      if (data.targetSlot) {
+        const targetEl = document.getElementById(data.targetSlot);
+        if (targetEl) {
+          if (targetEl.classList.contains('action-icon-chip')) {
+            targetEl.classList.add('active-highlight');
+          } else {
+            targetEl.classList.add('active-target');
+          }
+        }
+      }
+
+      // 渲染左側拼圖碎片
+      const piecesBox = document.getElementById('pieces-box');
+      piecesBox.innerHTML = '';
+
+      if (idx === 11) {
+        const sendSlot = document.getElementById('slot-send');
+        sendSlot.className = 'send-slot active-send active-target';
+        sendSlot.innerText = '🚀 點我傳送 (Send)';
+        sendSlot.onclick = () => handlePieceClick(true, "🎉 紙飛機起飛！信件成功發送至收件人郵箱！");
+
+        const msgDiv = document.createElement('div');
+        msgDiv.style.cssText = "font-size:1.05rem; font-weight:700; color:var(--accent-green); text-align:center; padding:20px 8px; line-height:1.5;";
+        msgDiv.innerHTML = "✨ 郵件拼圖已全數卡扣就緒！<br><br>👉 請點擊右側郵件視窗左下角的<br><b>【🚀 點我傳送】</b>按鈕！";
+        piecesBox.appendChild(msgDiv);
+      } else {
+        data.pieces.forEach(p => {
+          const btn = document.createElement('div');
+          btn.className = 'puzzle-piece';
+          btn.innerHTML = `<span>${p.text}</span><span class="piece-icon">🧩</span>`;
+          btn.onclick = () => handlePieceClick(p.correct, p.feedback, p.renderText, data.targetSlot);
+          piecesBox.appendChild(btn);
+        });
+      }
+
+      startTimer();
+    }
+
+    function handlePieceClick(isCorrect, feedbackMsg, renderText, targetSlotId) {
+      if (isProcessing || isPaused) return;
+
+      if (isCorrect) {
+        isProcessing = true;
+        cancelAnimationFrame(animFrameId);
+        playBeep(true);
+
+        const earned = Math.max(0, 10 - stageDeduction);
+        score += earned;
+        document.getElementById('score-text').innerText = score;
+
+        const fb = document.getElementById('feedback-hud');
+        fb.className = 'feedback-hud-bar fb-correct';
+        fb.innerText = `🎯 ${feedbackMsg} (+${earned}分)`;
+
+        // 嵌入拼圖或高亮按鈕
+        if (targetSlotId) {
+          const slot = document.getElementById(targetSlotId);
+          if (slot) {
+            if (renderText) {
+              slot.classList.add('slot-filled');
+              slot.innerHTML = `<span class="fitted-tag">✓ ${renderText}</span>`;
+            } else if (slot.classList.contains('action-icon-chip')) {
+              slot.classList.add('active-highlight');
+            }
+          }
+        }
+
+        setTimeout(() => {
+          nextStage();
+        }, 1400);
+
+      } else {
+        playBeep(false);
+        stageWrongCount++;
+        if (stageDeduction < 10) stageDeduction += 2;
+
+        const fb = document.getElementById('feedback-hud');
+        fb.className = 'feedback-hud-bar fb-wrong';
+        fb.innerText = feedbackMsg;
+
+        if (stageWrongCount >= 5) {
+          const hintBox = document.getElementById('help-hint-box');
+          hintBox.style.display = 'block';
+          hintBox.innerHTML = `💡 <b>提示：</b>${STAGES_DATA[currentStage].hint}`;
+        }
+      }
+    }
+
+    function nextStage() {
+      currentStage++;
+      if (currentStage < STAGES_DATA.length) {
+        loadStage(currentStage);
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      cancelAnimationFrame(animFrameId);
+      document.getElementById('result-student-info').innerText = `${currentStudentClass} 班 ${currentStudentNum} 號 小郵差`;
+      document.getElementById('final-score').innerText = score;
+      const titleEl = document.getElementById('final-title');
+      const evalEl = document.getElementById('final-eval');
+
+      if (score >= 110) {
+        titleEl.innerText = "👑 金牌卓越小郵差";
+        evalEl.innerText = "太厲害了！你完全摸透了 Gmail 的所有欄位與按鈕功能，書信禮貌拼得整整齊齊！🏆✨";
+      } else if (score >= 90) {
+        titleEl.innerText = "⚡ 優秀綠衣小郵差";
+        evalEl.innerText = "表現出色！電郵、主旨、附件與內文分得清清楚楚，發信精準快速！🚀👏";
+      } else if (score >= 70) {
+        titleEl.innerText = "🎯 合格通訊小助手";
+        evalEl.innerText = "很棒！你已經掌握了收件者只填電郵、以及寫信與運用按鈕的基本結構囉！🌟🎈";
+      } else {
+        titleEl.innerText = "🌱 潛力見習郵差";
+        evalEl.innerText = "多練習幾次，牢記密碼絕不能放進信件裏，下次一定拿更高分！💪💖";
+      }
+
+      document.getElementById('result-modal').style.display = 'flex';
+    }
+
+    function restartGame() {
+      document.getElementById('result-modal').style.display = 'none';
+      startGame();
+    }
+  </script>
+</body>
+</html>
